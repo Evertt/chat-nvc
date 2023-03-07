@@ -67,6 +67,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				{ role: 'system', content: systemPrompt },
 				...reqMessages
 			],
+			max_tokens: reqMessages.length ? undefined : 47
 		}
 
 		const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {
