@@ -15,3 +15,9 @@ body {
 body {
 	color: #333;
 }
+
+@media (prefers-color-scheme: dark) {
+	body {
+		color: #ccc;
+	}
+}
