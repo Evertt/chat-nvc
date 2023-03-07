@@ -23,7 +23,7 @@
       bind:value={query}
     />
   {/if}
-  <button type="submit" class="btn btn-accent disabled:text-white min-w-[100px]" disabled={loading}>
+  <button type="submit" class="btn btn-accent disabled:text-white min-w-[100px] flex-grow" disabled={loading}>
     {error ? 'Try again' : loading ? 'Loading' : 'Send' }
   </button>
 </form>
