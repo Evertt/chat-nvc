@@ -14,8 +14,18 @@
   class="flex w-full rounded-md gap-4 bg-gray-900 p-4"
   on:submit|preventDefault={() => handleSubmit()}
 >
-  <input type="text" class="input input-bordered w-full" bind:value={query} />
-  <button type="submit" class="btn btn-accent"> Send </button>
+  {#if !error}
+    <input
+      autofocus
+      type="text"
+      class="input input-bordered w-full"
+      placeholder={loading ? 'ChatNVC is processing your message...' : 'Type your message...'}
+      bind:value={query}
+    />
+  {/if}
+  <button type="submit" class="btn btn-accent disabled:text-white min-w-[100px]" disabled={loading}>
+    {error ? 'Try again' : loading ? 'Loading' : 'Send' }
+  </button>
 </form>
 
 <script lang="ts">
@@ -31,6 +41,8 @@
 	let scrollToDiv: HTMLDivElement
 	export let chatMessages: ChatCompletionRequestMessage[]
   export let userName = 'Me'
+  export let loading: boolean
+  export let error: boolean
 
 	function scrollToBottom() {
 		setTimeout(function () {

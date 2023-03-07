@@ -5,19 +5,37 @@
 
 	const errorMessage = `
 		Sorry, the servers of OpenAI are under heavy load.
-		Please wait a few moments and then try to click the send button again.
+		Please wait a few moments and then click the button below to try again.
 	`
-
+	let error = false
+	let loading = false
 	let chatMessages: ChatCompletionRequestMessage[] = []
 	let state: 'intro' | 'chat' = 'intro'
-	$: if (state === 'chat') sendNewMessage('')
 
 	const introData: IntroData = {
 		request: undefined,
-		names: ['']
+		names: [''],
+		get startingMessage() {
+			return ({
+				empathy: `
+					Hi ${this.names[0]}, what would you like empathy for today?
+				`,
+				mediation: `
+					Hello ${this.names[0]} and ${this.names[1]}, thank you for reaching out.
+					Can one of you start by explaining what the conflict is about?
+					Also, please make it clear who is currently writing.
+				`,
+			})[this.request!].replace(/^\n +|(\n) +/g, '$1')
+		}
 	}
 
+	$: if (state === 'chat') chatMessages = [
+		{ role: 'assistant', content: introData.startingMessage }
+	]
+
 	const sendNewMessage = async (newMessage: string) => {
+		error = false
+		loading = true
 		let answer = ''
 
 		if (chatMessages.at(-1)?.content === errorMessage) {
@@ -45,7 +63,7 @@
 
 		eventSource.addEventListener('message', (e) => {
 			try {
-				if (e.data === '[DONE]') return
+				if (e.data === '[DONE]') return void (loading = false)
 
 				const completionResponse = JSON.parse(e.data)
 				const [{ delta }] = completionResponse.choices
@@ -66,6 +84,8 @@
 	}
 
 	function handleError<T>(err: T) {
+		error = true
+		loading = false
 		chatMessages = [
 			...chatMessages.slice(0, -1),
 			{ role: 'assistant', content: errorMessage }
@@ -124,6 +144,7 @@
 							autocomplete="off"
 							list="autocompleteOff"
 							aria-autocomplete="none"
+							autofocus={i === 0}
 						/>
 					{/each}
 					<button class="input btn btn-accent" type="submit">
@@ -134,6 +155,8 @@
 		</div>
 	{:else}
 		<ChatWindow
+			loading={loading}
+			error={error}
 			userName={introData.names[0]}
 			bind:chatMessages={chatMessages}
 			on:new-message={

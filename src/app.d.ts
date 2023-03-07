@@ -12,6 +12,7 @@ declare global {
 	interface IntroData {
 		request?: 'empathy' | 'mediation'
 		names: [string] | [string, string]
+		readonly startingMessage: string
 	}
 }
 
