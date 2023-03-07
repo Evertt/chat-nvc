@@ -4,7 +4,7 @@
 	export let message: string
 	export let name: string
 
-	$: unquotedMessage = message.replace(/^"([\s\S]+)"$/, '$1')
+	$: unquotedMessage = message.replace(/^"([\s\S]*)"$/, '$1')
 </script>
 
 <div class="chat {type === 'user' ? 'chat-end' : 'chat-start'} justify-end">
