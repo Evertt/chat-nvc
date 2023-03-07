@@ -11,3 +11,7 @@ body {
 body {
 	@apply text-white;
 }
+
+body {
+	color: #333;
+}

@@ -7,7 +7,8 @@ const GPT3Tokenizer: typeof GPT3TokenizerImport =
 
 const tokenizer = new GPT3Tokenizer({ type: 'gpt3' })
 
-export function getTokens(input: string): number {
+export function getTokens(input?: string): number {
+	if (!input) return 0
 	const tokens = tokenizer.encode(input)
 	return tokens.text.length
 }

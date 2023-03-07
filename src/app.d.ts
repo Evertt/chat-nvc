@@ -8,6 +8,11 @@ declare global {
 		// interface PageData {}
 		// interface Platform {}
 	}
+
+	interface IntroData {
+		request?: 'empathy' | 'mediation'
+		names: [string] | [string, string]
+	}
 }
 
 export {}
