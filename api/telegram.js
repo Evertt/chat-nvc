@@ -43,7 +43,7 @@ bot.action('dog', ctx => {
 
 bot.action('cat', ctx => {
 	console.log('cat', ctx.from)
-	ctx.replyWithPhoto(`${host}/res/cat.jpg`)
+	ctx.replyWithPhoto('/res/cat.jpg')
 })
 
 const botWebhook = bot.webhookCallback('/api/telegram', {
