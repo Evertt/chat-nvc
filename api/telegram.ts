@@ -88,6 +88,8 @@ bot.on(message('text'), async ctx => {
 		const [results] = moderationData.results
 
 		if (results.flagged) {
+			console.log('Message flagged by OpenAI:', ctx.message.text)
+
 			const categories = Object.entries(results.categories)
 				.filter(([_, value]) => value)
 				.map(([category]) => category)
@@ -98,6 +100,8 @@ bot.on(message('text'), async ctx => {
 				Please try to rephrase your message. 🙏
 			`.replace(/^\n +|(\n) +/g, '$1'))
 		}
+
+		console.log('Message not flagged by OpenAI:', ctx.message.text)
 
 		const messages = chats.get(ctx.chat.id)!
 		messages.push({
@@ -138,7 +142,11 @@ bot.on(message('text'), async ctx => {
 			throw new Error(err)
 		}
 
+		console.log('Chat response ok')
+
 		const assistantResponse = await readAllChunks(chatResponse.body)
+
+		console.log('Assistant response:', assistantResponse)
 
 		ctx.reply(assistantResponse)
 
