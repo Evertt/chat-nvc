@@ -12,8 +12,8 @@
 	let chatMessages: ChatCompletionRequestMessage[] = []
 	let state: 'intro' | 'chat' = 'intro'
 
-	const introData: IntroData = {
-		request: undefined,
+	const introData = {
+		request: undefined as IntroData['request'],
 		names: [''],
 		get startingMessage() {
 			return ({
