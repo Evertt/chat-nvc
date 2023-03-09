@@ -1,5 +1,7 @@
-import { Telegraf } from 'telegraf'
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const Telegraf = require('telegraf')
 
 const { TELEGRAM_KEY, TELEGRAM_WEBBOOK_TOKEN } = process.env
 const bot = new Telegraf(TELEGRAM_KEY)
