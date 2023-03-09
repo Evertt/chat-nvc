@@ -50,5 +50,4 @@ const botWebhook = bot.webhookCallback('/api/telegram', {
 	secretToken: TELEGRAM_WEBBOOK_TOKEN
 })
 
-export const config = { runtime: 'edge' }
 export default (req, res) => botWebhook(req, res)
