@@ -1,4 +1,3 @@
-import { SSE } from 'sse.js'
 import { Telegraf } from 'telegraf'
 import { message } from 'telegraf/filters'
 import { getSystemPrompt } from './.dep/handleAnswers'
@@ -6,7 +5,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import type {
 	CreateModerationResponse,
 	CreateChatCompletionRequest,
-	ChatCompletionRequestMessage
+	CreateChatCompletionResponse,
+	ChatCompletionRequestMessage,
 } from 'openai'
 
 declare const process: {
@@ -34,28 +34,6 @@ const {
 const bot = new Telegraf(TELEGRAM_KEY)
 // const host = 'https://chat-nvc.vercel.app'
 
-async function readAllChunks(readableStream: ReadableStream<Uint8Array> | null) {
-	if (!readableStream) return ''
-
-  const reader = readableStream.getReader()
-	const decoder = new TextDecoder('utf-8')
-  let string = ''
-  
-  let done = false, value: Uint8Array | undefined
-
-  while (!done) {
-    ({ value, done } = await reader.read())
-    if (done) break
-		const data = decoder.decode(value!)
-			.trim().replace(/\s*data: \[DONE\]\s*$/, '')
-		const json = JSON.parse(data.substring(6))
-		string += json?.choices?.[0]?.delta?.content ?? ''
-		if (json?.choices?.[0]?.finish_reason) break
-  }
-
-	return string
-}
-
 bot.start(ctx => {
 	if (ctx.chat.type !== 'private')
 		return ctx.reply('Please write to me in a private chat 🙏')
@@ -74,14 +52,6 @@ bot.on(message('text'), async ctx => {
 	if (!chats.has(ctx.chat.id)) chats.set(ctx.chat.id, [])
 
 	// await ctx.sendChatAction('typing')
-
-	const handleError = (error: any) => {
-		console.error(error)
-		ctx.reply(`
-			Something went wrong. It's possible that OpenAI's servers are overloaded.
-			Please try again in a few seconds or minutes. 🙏
-		`.replace(/\s+/g, ' '))
-	}
 
 	try {
 		const moderationRes = await fetch('https://api.openai.com/v1/moderations', {
@@ -135,47 +105,45 @@ bot.on(message('text'), async ctx => {
 		const chatRequestOpts: CreateChatCompletionRequest = {
 			model: 'gpt-3.5-turbo',
 			temperature: 0.9,
-			stream: true,
 			messages: chatMessages,
 		}
 	
-		let answer = ''
-
-		const eventSource = new SSE('https://api.openai.com/v1/chat/completions', {
+		const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {
 			headers: {
 				Authorization: `Bearer ${OPENAI_KEY}`,
 				'Content-Type': 'application/json'
 			},
-			payload: JSON.stringify(chatRequestOpts)
+			method: 'POST',
+			body: JSON.stringify(chatRequestOpts)
 		})
 
-		eventSource.addEventListener('error', handleError)
+		if (!chatResponse.ok) {
+			const err = await chatResponse.json()
+			throw new Error(err)
+		}
 
-		eventSource.addEventListener('message', (e) => {
-			try {
-				if (e.data === '[DONE]') return
+		console.log('Chat response ok')
 
-				const completionResponse = JSON.parse(e.data)
-				const [{ delta }] = completionResponse.choices
+		const completionResponse: CreateChatCompletionResponse = await chatResponse.json()
+		
+		const assistantResponse = completionResponse.choices[0]?.message?.content ?? ''
 
-				if (delta.content) {
-					answer += delta.content
-				} else {
-					ctx.reply(answer)
-					messages.push({
-						name: 'ChatNVC',
-						message: answer,
-						timestamp: Date.now(),
-					})
-				}
-			} catch (err) {
-				handleError(err)
-			}
+		console.log('Assistant response:', assistantResponse)
+
+		ctx.reply(assistantResponse)
+
+		messages.push({
+			name: 'ChatNVC',
+			message: assistantResponse,
+			timestamp: Date.now()
 		})
-
-		eventSource.stream()
 	} catch (error) {
-		handleError(error)
+		console.error(error)
+
+		ctx.reply(`
+			Something went wrong. It's possible that OpenAI's servers are overloaded.
+			Please try again in a few seconds or minutes. 🙏
+		`.replace(/\s+/g, ' '))
 	}
 
 	cleanUpChats()
