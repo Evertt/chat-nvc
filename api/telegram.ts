@@ -1,4 +1,5 @@
 import { Telegraf } from 'telegraf'
+import { getSystemPrompt } from '../src/lib/handleAnswers'
 
 const { TELEGRAM_KEY, TELEGRAM_WEBBOOK_TOKEN } = process.env
 const bot = new Telegraf(TELEGRAM_KEY)
@@ -6,7 +7,10 @@ const host = 'https://chat-nvc.vercel.app'
 
 bot.command('start', ctx => {
 	console.log('start', ctx.from)
-	ctx.reply('hello there! Welcome to my new telegram bot.')
+	ctx.reply(getSystemPrompt({
+		request: 'empathy',
+		names: [ctx.from.first_name],
+	}))
 })
 
 //method that displays the inline keyboard buttons
@@ -43,7 +47,7 @@ bot.action('dog', ctx => {
 
 bot.action('cat', ctx => {
 	console.log('cat', ctx.from)
-	ctx.replyWithPhoto('/res/cat.jpg')
+	ctx.replyWithPhoto(`${host}/res/cat.jpg`)
 })
 
 const botWebhook = bot.webhookCallback('/api/telegram', {
