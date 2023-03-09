@@ -7,13 +7,13 @@ const config = {
 	// Consult https://kit.svelte.dev/docs/integrations#preprocessors
 	// for more information about preprocessors
 	preprocess: [vitePreprocess(), preprocess({
-        postcss: true
-    })],
+		postcss: true
+	})],
 
 	kit: {
 		adapter: adapter({
-            runtime: 'nodejs18.x'
-        })
+			runtime: 'nodejs18.x'
+		})
 	}
 };
 

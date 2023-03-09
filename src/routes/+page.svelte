@@ -52,7 +52,7 @@
 			{ role: 'assistant', content: 'thinking...' },
 		]
 
-		const eventSource = new SSE('/api/chat', {
+		const eventSource = new SSE('/sk-api/chat', {
 			headers: {
 				'Content-Type': 'application/json'
 			},
@@ -135,6 +135,7 @@
 					on:submit|preventDefault={() => state = 'chat'}
 				>
 					{#each introData.names as name, i}
+						<!-- svelte-ignore a11y-autofocus -->
 						<input
 							class="input input-bordered"
 							type="text"

@@ -15,6 +15,7 @@
   on:submit|preventDefault={() => handleSubmit()}
 >
   {#if !error}
+    <!-- svelte-ignore a11y-autofocus -->
     <input
       autofocus
       type="text"
