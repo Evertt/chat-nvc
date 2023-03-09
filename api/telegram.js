@@ -1,7 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const Telegraf = require('telegraf')
+import { Telegraf } from 'telegraf'
 
 const { TELEGRAM_KEY, TELEGRAM_WEBBOOK_TOKEN } = process.env
 const bot = new Telegraf(TELEGRAM_KEY)
@@ -55,6 +52,4 @@ const botWebhook = bot.webhookCallback('/api/telegram', {
 	secretToken: TELEGRAM_WEBBOOK_TOKEN
 })
 
-export default function (req: VercelRequest, res: VercelResponse) {
-  botWebhook(req, res)
-}
+export default (req, res) => botWebhook(req, res)
