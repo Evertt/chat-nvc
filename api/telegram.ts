@@ -1,5 +1,12 @@
 import { Telegraf } from 'telegraf'
-import { getSystemPrompt } from '../src/lib/handleAnswers'
+import { getSystemPrompt } from './.dep/handleAnswers'
+
+declare const process: {
+	env: {
+		TELEGRAM_KEY: string
+		TELEGRAM_WEBBOOK_TOKEN: string
+	}
+}
 
 const { TELEGRAM_KEY, TELEGRAM_WEBBOOK_TOKEN } = process.env
 const bot = new Telegraf(TELEGRAM_KEY)
@@ -7,9 +14,11 @@ const host = 'https://chat-nvc.vercel.app'
 
 bot.command('start', ctx => {
 	console.log('start', ctx.from)
+
 	ctx.reply(getSystemPrompt({
 		request: 'empathy',
 		names: [ctx.from.first_name],
+		startingMessage: 'Hi'
 	}))
 })
 
@@ -54,4 +63,4 @@ const botWebhook = bot.webhookCallback('/api/telegram', {
 	secretToken: TELEGRAM_WEBBOOK_TOKEN
 })
 
-export default (req, res) => botWebhook(req, res)
+export default (req: any, res: any) => botWebhook(req, res)

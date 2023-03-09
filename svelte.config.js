@@ -13,7 +13,10 @@ const config = {
 	kit: {
 		adapter: adapter({
 			runtime: 'nodejs18.x'
-		})
+		}),
+		alias: {
+			$api: './api',
+		}
 	}
 };
 

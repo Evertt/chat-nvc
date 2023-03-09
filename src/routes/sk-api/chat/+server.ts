@@ -1,8 +1,8 @@
 import { OPENAI_KEY } from '$env/static/private'
-import { getSystemPrompt } from '$lib/handleAnswers'
+import { getSystemPrompt } from '$api/.dep/handleAnswers'
 import type { CreateChatCompletionRequest, ChatCompletionRequestMessage } from 'openai'
 import type { RequestHandler } from './$types'
-import { getTokens } from '$lib/tokenizer'
+import { getTokens } from '$api/.dep/tokenizer'
 import { json } from '@sveltejs/kit'
 import type { Config } from '@sveltejs/adapter-vercel'
 
