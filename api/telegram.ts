@@ -70,7 +70,7 @@ bot.on(message('text'), async ctx => {
 	if (ctx.chat.type !== 'private') return
 	if (!chats.has(ctx.chat.id)) chats.set(ctx.chat.id, [])
 
-	await ctx.sendChatAction('typing')
+	// await ctx.sendChatAction('typing')
 
 	try {
 		const moderationRes = await fetch('https://api.openai.com/v1/moderations', {
