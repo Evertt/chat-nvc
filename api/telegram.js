@@ -2,10 +2,11 @@ import { Telegraf } from 'telegraf'
 
 const { TELEGRAM_KEY, TELEGRAM_WEBBOOK_TOKEN } = process.env
 const bot = new Telegraf(TELEGRAM_KEY)
+const host = 'https://chat-nvc.vercel.app'
 
 bot.command('start', ctx => {
 	console.log('start', ctx.from)
-	bot.telegram.sendMessage(ctx.chat.id, 'hello there! Welcome to my new telegram bot.', {})
+	ctx.reply('hello there! Welcome to my new telegram bot.')
 })
 
 //method that displays the inline keyboard buttons
@@ -13,7 +14,7 @@ bot.command('start', ctx => {
 bot.command('animals', ctx => {
 	console.log('animals', ctx.from)
 	const animalMessage = `great, here are pictures of animals you would love`
-	bot.telegram.sendMessage(ctx.chat.id, animalMessage, {
+	ctx.reply(animalMessage, {
 		reply_markup: {
 			inline_keyboard: [
 				[
@@ -35,22 +36,19 @@ bot.command('animals', ctx => {
 
 bot.action('dog', ctx => {
 	console.log('dog', ctx.from)
-	bot.telegram.sendPhoto(ctx.chat.id, {
-		source: '/res/dog.jpg'
-	})
+	ctx.replyWithPhoto({ source: `${host}/res/dog.jpg` })
 })
 
 //method that returns image of a cat
 
 bot.action('cat', ctx => {
 	console.log('cat', ctx.from)
-	bot.telegram.sendPhoto(ctx.chat.id, {
-		source: '/res/cat.jpg'
-	})
+	ctx.replyWithPhoto({ source: `${host}/res/cat.jpg` })
 })
 
 const botWebhook = bot.webhookCallback('/api/telegram', {
 	secretToken: TELEGRAM_WEBBOOK_TOKEN
 })
 
+export const config = { runtime: 'edge' }
 export default (req, res) => botWebhook(req, res)
