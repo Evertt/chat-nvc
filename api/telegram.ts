@@ -47,6 +47,12 @@ bot.start(ctx => {
 	ctx.reply(greeting)
 })
 
+bot.help(ctx => ctx.reply(`
+	I'm ChatNVC, a bot that tries to listen to you empathically.
+	I remember our past messages for maximum 1 hour.
+	You can also force me to start over by typing /start.
+`.replace(/\s+/g, ' ')))
+
 bot.on(message('text'), async ctx => {
 	if (ctx.chat.type !== 'private') return
 	if (!chats.has(ctx.chat.id)) chats.set(ctx.chat.id, [])
