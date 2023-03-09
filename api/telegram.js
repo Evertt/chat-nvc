@@ -36,14 +36,14 @@ bot.command('animals', ctx => {
 
 bot.action('dog', ctx => {
 	console.log('dog', ctx.from)
-	ctx.replyWithPhoto({ source: `${host}/res/dog.jpg` })
+	ctx.replyWithPhoto(`${host}/res/dog.jpg`)
 })
 
 //method that returns image of a cat
 
 bot.action('cat', ctx => {
 	console.log('cat', ctx.from)
-	ctx.replyWithPhoto({ source: `${host}/res/cat.jpg` })
+	ctx.replyWithPhoto(`${host}/res/cat.jpg`)
 })
 
 const botWebhook = bot.webhookCallback('/api/telegram', {
