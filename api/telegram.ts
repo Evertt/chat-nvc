@@ -47,7 +47,10 @@ async function readAllChunks(readableStream: ReadableStream<Uint8Array> | null) 
     if (done) break
 		const data = decoder.decode(value!)
 		if (data === 'data: [DONE]') break
-		const json = JSON.parse(data.substring(6))
+		const jsonString = data.substring(6)
+		console.log('data', data)
+		console.log('jsonString', jsonString)
+		const json = JSON.parse(jsonString)
 		string += json?.choices?.[0]?.delta?.content ?? ''
   }
 
@@ -162,7 +165,7 @@ bot.on(message('text'), async ctx => {
 		ctx.reply(`
 			Something went wrong. It's possible that OpenAI's servers are overloaded.
 			Please try again in a few seconds or minutes. 🙏
-		`)
+		`.replace(/\s+/g, ' '))
 	}
 
 	cleanUpChats()
