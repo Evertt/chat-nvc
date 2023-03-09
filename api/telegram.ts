@@ -1,3 +1,4 @@
+import { SSE } from 'sse.js'
 import { Telegraf } from 'telegraf'
 import { message } from 'telegraf/filters'
 import { getSystemPrompt } from './.dep/handleAnswers'
@@ -74,6 +75,14 @@ bot.on(message('text'), async ctx => {
 
 	// await ctx.sendChatAction('typing')
 
+	const handleError = (error: any) => {
+		console.error(error)
+		ctx.reply(`
+			Something went wrong. It's possible that OpenAI's servers are overloaded.
+			Please try again in a few seconds or minutes. 🙏
+		`.replace(/\s+/g, ' '))
+	}
+
 	try {
 		const moderationRes = await fetch('https://api.openai.com/v1/moderations', {
 			headers: {
@@ -130,40 +139,43 @@ bot.on(message('text'), async ctx => {
 			messages: chatMessages,
 		}
 	
-		const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+		let answer = ''
+
+		const eventSource = new SSE('https://api.openai.com/v1/chat/completions', {
 			headers: {
 				Authorization: `Bearer ${OPENAI_KEY}`,
 				'Content-Type': 'application/json'
 			},
-			method: 'POST',
-			body: JSON.stringify(chatRequestOpts)
+			payload: JSON.stringify(chatRequestOpts)
 		})
 
-		if (!chatResponse.ok) {
-			const err = await chatResponse.json()
-			throw new Error(err)
-		}
+		eventSource.addEventListener('error', handleError)
 
-		console.log('Chat response ok')
+		eventSource.addEventListener('message', (e) => {
+			try {
+				if (e.data === '[DONE]') return
 
-		const assistantResponse = await readAllChunks(chatResponse.body)
+				const completionResponse = JSON.parse(e.data)
+				const [{ delta }] = completionResponse.choices
 
-		console.log('Assistant response:', assistantResponse)
-
-		ctx.reply(assistantResponse)
-
-		messages.push({
-			name: 'ChatNVC',
-			message: assistantResponse,
-			timestamp: Date.now()
+				if (delta.content) {
+					answer += delta.content
+				} else {
+					ctx.reply(answer)
+					messages.push({
+						name: 'ChatNVC',
+						message: answer,
+						timestamp: Date.now(),
+					})
+				}
+			} catch (err) {
+				handleError(err)
+			}
 		})
+
+		eventSource.stream()
 	} catch (error) {
-		console.error(error)
-
-		ctx.reply(`
-			Something went wrong. It's possible that OpenAI's servers are overloaded.
-			Please try again in a few seconds or minutes. 🙏
-		`.replace(/\s+/g, ' '))
+		handleError(error)
 	}
 
 	cleanUpChats()
