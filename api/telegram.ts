@@ -45,10 +45,11 @@ async function readAllChunks(readableStream: ReadableStream<Uint8Array> | null) 
   while (!done) {
     ({ value, done } = await reader.read())
     if (done) break
-		string += decoder.decode(value!, { stream: true })
+		const data = decoder.decode(value!)
+		if (data === 'data: [DONE]') break
+		const json = JSON.parse(data.substring(6))
+		string += json?.choices?.[0]?.delta?.content ?? ''
   }
-
-	string += decoder.decode()
 
 	return string
 }
