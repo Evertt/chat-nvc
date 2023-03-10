@@ -58,9 +58,21 @@ bot.on(message('text'), async ctx => {
 	if (!chats.has(ctx.chat.id)) chats.set(ctx.chat.id, [])
 
 	/** @ts-expect-error ignore this error */
-	const response = ctx.telegram.response
+	const response: VercelResponse = ctx.telegram.response
 	/** @ts-expect-error ignore this error */
 	ctx.telegram.response = undefined
+
+	response.on('finish', () => {
+		clearInterval(interval)
+		console.log('Response finished')
+		console.trace()
+	})
+
+	response.on('close', () => {
+		clearInterval(interval)
+		console.log('Response closed')
+		console.trace()
+	})
 
 	console.log("Send typing action...")
 	ctx.sendChatAction('typing')
