@@ -96,6 +96,10 @@ bot.on(message('text'), async ctx => {
 
 	console.log("Send typing action...")
 	sendTypingAction(ctx.chat.id)
+		.then(async resp => {
+			const json = await resp.json()
+			console.log("Sent typing action:", json)
+		})
 
 	console.log("Set interval...")
 	const interval = setInterval(
