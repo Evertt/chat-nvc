@@ -34,7 +34,7 @@ const {
 const bot = new Telegraf(TELEGRAM_KEY)
 // const host = 'https://chat-nvc.vercel.app'
 
-bot.start(ctx => {
+bot.start(async ctx => {
 	if (ctx.chat.type !== 'private')
 		return ctx.reply('Please write to me in a private chat 🙏')
 
@@ -44,7 +44,8 @@ bot.start(ctx => {
 		{ name: 'ChatNVC', message: greeting, timestamp: Date.now() }
 	])
 
-	ctx.reply(greeting)
+	await ctx.reply(greeting)
+	await ctx.reply('You can also type /help to see what I can do.')
 })
 
 bot.help(ctx => ctx.reply(`
@@ -58,6 +59,7 @@ bot.on(message('text'), async ctx => {
 	if (!chats.has(ctx.chat.id)) chats.set(ctx.chat.id, [])
 
 	// await ctx.sendChatAction('typing')
+	// await ctx.telegram.sendChatAction(ctx.chat.id, 'typing')
 
 	try {
 		const moderationRes = await fetch('https://api.openai.com/v1/moderations', {
