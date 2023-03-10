@@ -57,10 +57,11 @@ bot.on(message('text'), async ctx => {
 	if (ctx.chat.type !== 'private') return
 	if (!chats.has(ctx.chat.id)) chats.set(ctx.chat.id, [])
 
-	console.log("Sending typing action...")
-	await ctx.sendChatAction('typing')
-	console.log("Setting typing action interval")
-	const interval = setInterval(() => ctx.sendChatAction('typing'), 5100)
+	bot.telegram.sendChatAction(ctx.chat.id, 'typing')
+	const interval = setInterval(
+		() => bot.telegram.sendChatAction(ctx.chat.id, 'typing'),
+		5100
+	)
 
 	const execute = async () => {
 		console.log("Executing...")
