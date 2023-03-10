@@ -179,7 +179,8 @@ function cleanUpChats() {
 			bot.telegram.sendMessage(
 				chatId,
 				'Just FYI, I just deleted our chat history from my memory. ' +
-				'So now if you would send me a new message, we would be starting over.'
+				'So now if you would send me a new message, we would be starting over. ' +
+				"I won't even remember that I sent you this message."
 			)
 		}
 		else chats.set(chatId, messages.slice(i))
