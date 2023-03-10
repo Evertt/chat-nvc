@@ -79,36 +79,29 @@ bot.on(message('text'), async ctx => {
 
 	/** @ts-expect-error ignore this error */
 	const response: VercelResponse = ctx.telegram.response
-	// /** @ts-expect-error ignore this error */
-	// ctx.telegram.response = undefined
+	/** @ts-expect-error ignore this error */
+	ctx.telegram.response = undefined
 
 	response.on('finish', () => {
-		// clearInterval(interval)
+		clearInterval(interval)
 		console.log('Response finished')
 		console.trace()
 	})
 
 	response.on('close', () => {
-		// clearInterval(interval)
+		clearInterval(interval)
 		console.log('Response closed')
 		console.trace()
 	})
 
-	// console.log("Send typing action...")
-	// sendTypingAction(ctx.chat.id)
-	// 	.then(async resp => {
-	// 		const json = await resp.json()
-	// 		console.log("Sent typing action:", json)
-	// 	})
+	console.log("Send typing action...")
+	ctx.sendChatAction('typing')
 
-	// console.log("Set interval...")
-	// const interval = setInterval(
-	// 	() => {
-	// 		console.log("Send another typing action...")
-	// 		sendTypingAction(ctx.chat.id)
-	// 	},
-	// 	5100
-	// )
+	console.log("Set interval...")
+	const interval = setInterval(
+		() => ctx.sendChatAction('typing'),
+		5100
+	)
 
 	const getReply = async () => {
 		console.log("Executing...")
@@ -202,8 +195,8 @@ bot.on(message('text'), async ctx => {
 		.then(reply => {
 			console.log("Reply:", reply)
 
-			// /** @ts-expect-error ignore this error */
-			// ctx.telegram.response = response
+			/** @ts-expect-error ignore this error */
+			ctx.telegram.response = response
 
 			ctx.reply(reply)
 		})
@@ -217,7 +210,7 @@ bot.on(message('text'), async ctx => {
 		})
 		.finally(() => {
 			console.log("Clearing typing action interval")
-			// clearInterval(interval)
+			clearInterval(interval)
 			cleanUpChats()
 		})
 })
