@@ -45,7 +45,6 @@ bot.start(async ctx => {
 	])
 
 	await ctx.reply(greeting)
-	await ctx.reply('You can also type /help to see what I can do.')
 })
 
 bot.help(ctx => ctx.reply(`
@@ -58,10 +57,10 @@ bot.on(message('text'), async ctx => {
 	if (ctx.chat.type !== 'private') return
 	if (!chats.has(ctx.chat.id)) chats.set(ctx.chat.id, [])
 
-	// await ctx.sendChatAction('typing')
-	// await ctx.telegram.sendChatAction(ctx.chat.id, 'typing')
+	await ctx.sendChatAction('typing')
+	const interval = setInterval(() => ctx.sendChatAction('typing'), 5100)
 
-	try {
+	const execute = async () => {
 		const moderationRes = await fetch('https://api.openai.com/v1/moderations', {
 			headers: {
 				'Content-Type': 'application/json',
@@ -145,16 +144,21 @@ bot.on(message('text'), async ctx => {
 			message: assistantResponse,
 			timestamp: Date.now()
 		})
-	} catch (error) {
-		console.error(error)
-
-		ctx.reply(`
-			Something went wrong. It's possible that OpenAI's servers are overloaded.
-			Please try again in a few seconds or minutes. 🙏
-		`.replace(/\s+/g, ' '))
 	}
 
-	cleanUpChats()
+	execute()
+		.catch(error => {
+			console.error(error)
+	
+			ctx.reply(`
+				Something went wrong. It's possible that OpenAI's servers are overloaded.
+				Please try again in a few seconds or minutes. 🙏
+			`.replace(/\s+/g, ' '))
+		})
+		.finally(() => {
+			clearInterval(interval)
+			cleanUpChats()
+		})
 })
 
 const botWebhook = bot.webhookCallback('/api/telegram', {
