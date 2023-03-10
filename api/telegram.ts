@@ -174,7 +174,14 @@ function cleanUpChats() {
 		)
 
 		if (i === 0) continue
-		else if (i === -1) chats.delete(chatId)
+		else if (i === -1) {
+			chats.delete(chatId)
+			bot.telegram.sendMessage(
+				chatId,
+				'Just FYI, I just deleted our chat history from my memory. ' +
+				'So now if you would send me a new message, we would be starting over.'
+			)
+		}
 		else chats.set(chatId, messages.slice(i))
 	}
 }
