@@ -57,10 +57,14 @@ bot.on(message('text'), async ctx => {
 	if (ctx.chat.type !== 'private') return
 	if (!chats.has(ctx.chat.id)) chats.set(ctx.chat.id, [])
 
+	console.log("Sending typing action...")
 	await ctx.sendChatAction('typing')
+	console.log("Setting typing action interval")
 	const interval = setInterval(() => ctx.sendChatAction('typing'), 5100)
 
 	const execute = async () => {
+		console.log("Executing...")
+
 		const moderationRes = await fetch('https://api.openai.com/v1/moderations', {
 			headers: {
 				'Content-Type': 'application/json',
@@ -148,7 +152,7 @@ bot.on(message('text'), async ctx => {
 
 	execute()
 		.catch(error => {
-			console.error(error)
+			console.log(error)
 	
 			ctx.reply(`
 				Something went wrong. It's possible that OpenAI's servers are overloaded.
@@ -156,6 +160,7 @@ bot.on(message('text'), async ctx => {
 			`.replace(/\s+/g, ' '))
 		})
 		.finally(() => {
+			console.log("Clearing typing action interval")
 			clearInterval(interval)
 			cleanUpChats()
 		})
