@@ -57,13 +57,24 @@ bot.on(message('text'), async ctx => {
 	if (ctx.chat.type !== 'private') return
 	if (!chats.has(ctx.chat.id)) chats.set(ctx.chat.id, [])
 
-	bot.telegram.sendChatAction(ctx.chat.id, 'typing')
+	/** @ts-expect-error ignore this error */
+	const response = ctx.telegram.response
+	/** @ts-expect-error ignore this error */
+	ctx.telegram.response = undefined
+
+	console.log("Send typing action...")
+	ctx.sendChatAction('typing')
+
+	console.log("Set interval...")
 	const interval = setInterval(
-		() => bot.telegram.sendChatAction(ctx.chat.id, 'typing'),
+		() => {
+			console.log("Send another typing action...")
+			ctx.sendChatAction('typing')
+		},
 		5100
 	)
 
-	const execute = async () => {
+	const getReply = async () => {
 		console.log("Executing...")
 
 		const moderationRes = await fetch('https://api.openai.com/v1/moderations', {
@@ -88,10 +99,10 @@ bot.on(message('text'), async ctx => {
 				.map(([category]) => category)
 				.join(', ')
 
-			return ctx.reply(`
+			return `
 				Your message was flagged by OpenAI for ${categories}.
 				Please try to rephrase your message. 🙏
-			`.replace(/^\n +|(\n) +/g, '$1'))
+			`.replace(/^\n +|(\n) +/g, '$1')
 		}
 
 		console.log('Message not flagged by OpenAI:', ctx.message.text)
@@ -142,18 +153,26 @@ bot.on(message('text'), async ctx => {
 
 		console.log('Assistant response:', assistantResponse)
 
-		ctx.reply(assistantResponse)
-
 		messages.push({
 			name: 'ChatNVC',
 			message: assistantResponse,
 			timestamp: Date.now()
 		})
+
+		return assistantResponse
 	}
 
-	execute()
+	getReply()
+		.then(reply => {
+			console.log("Reply:", reply)
+
+			/** @ts-expect-error ignore this error */
+			ctx.telegram.response = response
+
+			ctx.reply(reply)
+		})
 		.catch(error => {
-			console.log(error)
+			console.log("Error:", error)
 	
 			ctx.reply(`
 				Something went wrong. It's possible that OpenAI's servers are overloaded.
