@@ -34,6 +34,26 @@ const {
 const bot = new Telegraf(TELEGRAM_KEY)
 // const host = 'https://chat-nvc.vercel.app'
 
+const sendTypingAction = (chatId: number) => {
+	const payload = {
+		chat_id: chatId,
+		action: 'typing',
+	}
+
+	const config: RequestInit = {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+  }
+
+	const apiUrl = new URL(
+		`./bot${TELEGRAM_KEY}/sendChatAction`,
+		'https://api.telegram.org'
+	)
+
+	return fetch(apiUrl, config)
+}
+
 bot.start(async ctx => {
 	if (ctx.chat.type !== 'private')
 		return ctx.reply('Please write to me in a private chat 🙏')
@@ -59,8 +79,8 @@ bot.on(message('text'), async ctx => {
 
 	/** @ts-expect-error ignore this error */
 	const response: VercelResponse = ctx.telegram.response
-	/** @ts-expect-error ignore this error */
-	ctx.telegram.response = undefined
+	// /** @ts-expect-error ignore this error */
+	// ctx.telegram.response = undefined
 
 	response.on('finish', () => {
 		clearInterval(interval)
@@ -75,13 +95,13 @@ bot.on(message('text'), async ctx => {
 	})
 
 	console.log("Send typing action...")
-	ctx.sendChatAction('typing')
+	sendTypingAction(ctx.chat.id)
 
 	console.log("Set interval...")
 	const interval = setInterval(
 		() => {
 			console.log("Send another typing action...")
-			ctx.sendChatAction('typing')
+			sendTypingAction(ctx.chat.id)
 		},
 		5100
 	)
@@ -178,8 +198,8 @@ bot.on(message('text'), async ctx => {
 		.then(reply => {
 			console.log("Reply:", reply)
 
-			/** @ts-expect-error ignore this error */
-			ctx.telegram.response = response
+			// /** @ts-expect-error ignore this error */
+			// ctx.telegram.response = response
 
 			ctx.reply(reply)
 		})
