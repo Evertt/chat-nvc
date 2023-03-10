@@ -198,7 +198,7 @@ bot.on(message('text'), async ctx => {
 		return assistantResponse
 	}
 
-	getReply()
+	await getReply()
 		.then(reply => {
 			console.log("Reply:", reply)
 
