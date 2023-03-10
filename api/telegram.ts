@@ -34,26 +34,6 @@ const {
 const bot = new Telegraf(TELEGRAM_KEY)
 // const host = 'https://chat-nvc.vercel.app'
 
-const sendTypingAction = (chatId: number) => {
-	const payload = {
-		chat_id: chatId,
-		action: 'typing',
-	}
-
-	const config: RequestInit = {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(payload),
-  }
-
-	const apiUrl = new URL(
-		`./bot${TELEGRAM_KEY}/sendChatAction`,
-		'https://api.telegram.org'
-	)
-
-	return fetch(apiUrl, config)
-}
-
 bot.start(async ctx => {
 	if (ctx.chat.type !== 'private')
 		return ctx.reply('Please write to me in a private chat 🙏')
@@ -82,30 +62,13 @@ bot.on(message('text'), async ctx => {
 	/** @ts-expect-error ignore this error */
 	ctx.telegram.response = undefined
 
-	response.on('finish', () => {
-		clearInterval(interval)
-		console.log('Response finished')
-		console.trace()
-	})
-
-	response.on('close', () => {
-		clearInterval(interval)
-		console.log('Response closed')
-		console.trace()
-	})
-
-	console.log("Send typing action...")
 	ctx.sendChatAction('typing')
-
-	console.log("Set interval...")
 	const interval = setInterval(
 		() => ctx.sendChatAction('typing'),
 		5100
 	)
 
 	const getReply = async () => {
-		console.log("Executing...")
-
 		const moderationRes = await fetch('https://api.openai.com/v1/moderations', {
 			headers: {
 				'Content-Type': 'application/json',
@@ -180,8 +143,6 @@ bot.on(message('text'), async ctx => {
 		
 		const assistantResponse = completionResponse.choices[0]?.message?.content ?? ''
 
-		console.log('Assistant response:', assistantResponse)
-
 		messages.push({
 			name: 'ChatNVC',
 			message: assistantResponse,
@@ -209,7 +170,6 @@ bot.on(message('text'), async ctx => {
 			`.replace(/\s+/g, ' '))
 		})
 		.finally(() => {
-			console.log("Clearing typing action interval")
 			clearInterval(interval)
 			cleanUpChats()
 		})
