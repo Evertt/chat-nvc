@@ -6,8 +6,8 @@ const bot = new Telegraf(TELEGRAM_KEY)
 
 export const GET: RequestHandler = async () => {
   await bot.telegram.setWebhook(
-		'https://chat-nvc.vercel.app/api/telegram',
-		{ secret_token: TELEGRAM_WEBBOOK_TOKEN }
+		'https://chat-nvc.vercel.app/api/py_telegram',
+		// { secret_token: TELEGRAM_WEBBOOK_TOKEN }
 	)
 
 	return new Response('ok')
