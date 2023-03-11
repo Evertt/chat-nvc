@@ -9,15 +9,16 @@ import gtts
 from queue import Queue
 from fastapi import FastAPI, Request
 from telegram.ext import Updater, filters
-from http.server import BaseHTTPRequestHandler
+# from http.server import BaseHTTPRequestHandler
 
 AUDIOS_DIR = "audios"
 OPENAI_TOKEN = os.getenv("OPENAI_KEY")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_KEY")
 
 app = FastAPI()
-# update_queue = Queue()
-updater = Updater(token=TELEGRAM_TOKEN, use_context=True)
+update_queue = Queue()
+bot = telegram.Bot(token=TELEGRAM_TOKEN)
+updater = Updater(bot=bot, update_queue=update_queue)
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -133,5 +134,5 @@ updater.dispatcher.add_handler(telegram.ext.MessageHandler(
 @app.post('/')
 async def vercel_webhook(request: Request):
     update = telegram.Update.de_json(await request.json(), updater.bot)
-    updater.process_update(update)
-    return 'OK'
+    update_queue.put(update)
+    return
