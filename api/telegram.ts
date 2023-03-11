@@ -57,8 +57,8 @@ bot.on(message('text'), async ctx => {
 	if (ctx.chat.type !== 'private') return
 	if (!chats.has(ctx.chat.id)) chats.set(ctx.chat.id, [])
 
-	// /** @ts-expect-error ignore this error */
-	// const response: VercelResponse = ctx.telegram.response
+	// This is necessary to make sure Vercel doesn't
+	// finish the request before the bot has sent all messages
 	/** @ts-expect-error ignore this error */
 	ctx.telegram.response = undefined
 
@@ -84,8 +84,6 @@ bot.on(message('text'), async ctx => {
 		const [results] = moderationData.results
 
 		if (results.flagged) {
-			console.log('Message flagged by OpenAI:', ctx.message.text)
-
 			const categories = Object.entries(results.categories)
 				.filter(([_, value]) => value)
 				.map(([category]) => category)
@@ -96,8 +94,6 @@ bot.on(message('text'), async ctx => {
 				Please try to rephrase your message. 🙏
 			`.replace(/\s+/g, ' ')
 		}
-
-		console.log('Message not flagged by OpenAI:', ctx.message.text)
 
 		const messages = chats.get(ctx.chat.id)!
 		messages.push({
@@ -137,11 +133,13 @@ bot.on(message('text'), async ctx => {
 			throw new Error(err)
 		}
 
-		console.log('Chat response ok')
-
 		const completionResponse: CreateChatCompletionResponse = await chatResponse.json()
 		
 		const assistantResponse = completionResponse.choices[0]?.message?.content ?? ''
+
+		if (assistantResponse === '') {
+			throw new Error('OpenAI returned an empty response')
+		}
 
 		messages.push({
 			name: 'ChatNVC',
@@ -153,14 +151,7 @@ bot.on(message('text'), async ctx => {
 	}
 
 	await getReply()
-		.then(reply => {
-			console.log("Reply:", reply)
-
-			// /** @ts-expect-error ignore this error */
-			// ctx.telegram.response = response
-
-			ctx.reply(reply)
-		})
+		.then(reply => ctx.reply(reply))
 		.catch(error => {
 			console.log("Error:", error)
 	
