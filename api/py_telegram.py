@@ -7,6 +7,7 @@ import pydub
 import telegram
 import gtts
 from queue import Queue
+from fastapi import FastAPI, Request
 from telegram.ext import Updater, filters
 from http.server import BaseHTTPRequestHandler
 
@@ -14,8 +15,9 @@ AUDIOS_DIR = "audios"
 OPENAI_TOKEN = os.getenv("OPENAI_KEY")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_KEY")
 
-update_queue = Queue()
-updater = Updater(token=TELEGRAM_TOKEN, use_context=True, update_queue=update_queue)
+app = FastAPI()
+# update_queue = Queue()
+updater = Updater(token=TELEGRAM_TOKEN, use_context=True)
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -121,9 +123,15 @@ updater.dispatcher.add_handler(telegram.ext.MessageHandler(
     filters.VOICE, handle_voice))
 
 
-class handler(BaseHTTPRequestHandler):
+# class handler(BaseHTTPRequestHandler):
 
-    def do_POST(self):
-        update = telegram.Update.de_json(self.request.json, updater.bot)
-        update_queue.put(update)
-        return
+#     def do_POST(self):
+#         update = telegram.Update.de_json(self.request.json, updater.bot)
+#         update_queue.put(update)
+#         return
+
+@app.post('/')
+async def vercel_webhook(request: Request):
+    update = telegram.Update.de_json(await request.json(), updater.bot)
+    updater.process_update(update)
+    return 'OK'
