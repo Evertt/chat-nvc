@@ -184,8 +184,6 @@ bot.on(message('text'), async ctx => {
 bot.on(message('voice'), async ctx => {
 	if (ctx.chat.type !== 'private') return
 
-	const { fileTypeFromBuffer } = await import('file-type')
-
 	// This is necessary to make sure Vercel doesn't
 	// finish the request before the bot has sent all messages
 	/** @ts-expect-error ignore this error */
@@ -202,8 +200,7 @@ bot.on(message('voice'), async ctx => {
 	const voiceRes = await fetch(voice)
 	const voiceBuffer = await voiceRes.arrayBuffer()
 	
-	const type = await fileTypeFromBuffer(voiceBuffer)
-	await ctx.reply(`The voice message was of type ${type?.mime ?? 'unknown'}.`)
+	await ctx.reply(`The voice message was of type ${ctx.message.voice.mime_type} and of size ${ctx.message.voice.file_size}.`)
 
 	clearInterval(interval)
 })
