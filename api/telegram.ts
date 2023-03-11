@@ -1,6 +1,4 @@
 import { Telegraf } from 'telegraf'
-import type { Context, NarrowedContext } from 'telegraf'
-import type * as tg from 'telegraf/src/core/types/typegram'
 import { message } from 'telegraf/filters'
 import { getSystemPrompt } from './.dep/handleAnswers'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
@@ -55,11 +53,6 @@ bot.help(ctx => ctx.reply(`
 	You can also force me to start over by typing /start.
 `.replace(/\s+/g, ' ')))
 
-type MessageUpdateCtx = NarrowedContext<
-	Context<tg.Update>,
-	tg.Update.MessageUpdate<Record<"text", any> & tg.Message.TextMessage>
->
-
 const moderate = async (input: string) => {
 	const moderationRes = await fetch('https://api.openai.com/v1/moderations', {
 		headers: {
@@ -85,17 +78,19 @@ const moderate = async (input: string) => {
 	return false
 }
 
-const getReply = async (ctx: MessageUpdateCtx) => {
-	let moderationResult = await moderate(ctx.message.text)
+const getReply = async (chatId: number, name: string, text: string) => {
+	if (!chats.has(chatId)) chats.set(chatId, [])
+
+	let moderationResult = await moderate(text)
 	if (moderationResult) return `
 		Your message was flagged by OpenAI for ${moderationResult}.
 		Please try to rephrase your message. 🙏
 	`.replace(/\s+/g, ' ')
 
-	const messages = chats.get(ctx.chat.id)!
+	const messages = chats.get(chatId)!
 	messages.push({
-		name: ctx.from.first_name,
-		message: ctx.message.text,
+		name: name,
+		message: text,
 		timestamp: Date.now()
 	})
 	
@@ -105,7 +100,7 @@ const getReply = async (ctx: MessageUpdateCtx) => {
 
 	const systemPrompt = getSystemPrompt({
 		request: 'empathy',
-		names: [ctx.from.first_name],
+		names: [name],
 	})
 
 	chatMessages.unshift({ role: 'system', content: systemPrompt })
@@ -158,7 +153,6 @@ const getReply = async (ctx: MessageUpdateCtx) => {
 
 bot.on(message('text'), async ctx => {
 	if (ctx.chat.type !== 'private') return
-	if (!chats.has(ctx.chat.id)) chats.set(ctx.chat.id, [])
 
 	// This is necessary to make sure Vercel doesn't
 	// finish the request before the bot has sent all messages
@@ -171,7 +165,7 @@ bot.on(message('text'), async ctx => {
 		5100
 	)
 
-	await getReply(ctx)
+	await getReply(ctx.chat.id, ctx.from.first_name, ctx.message.text)
 		.then(reply => ctx.reply(reply))
 		.catch(error => {
 			console.log("Error:", error)
@@ -185,6 +179,29 @@ bot.on(message('text'), async ctx => {
 			clearInterval(interval)
 			cleanUpChats()
 		})
+})
+
+bot.on(message('voice'), async ctx => {
+	if (ctx.chat.type !== 'private') return
+
+	// This is necessary to make sure Vercel doesn't
+	// finish the request before the bot has sent all messages
+	/** @ts-expect-error ignore this error */
+	ctx.telegram.response = undefined
+
+	ctx.sendChatAction('typing')
+	const interval = setInterval(
+		() => ctx.sendChatAction('typing'),
+		5100
+	)
+
+	const voice = await ctx.telegram.getFileLink(ctx.message.voice.file_id)
+
+	const voiceRes = await fetch(voice)
+	const type = voiceRes.headers.get('content-type') // 'audio/ogg'
+
+	await ctx.reply(`The voice message was of type ${type}.`)
+	// const voiceBuffer = await voiceRes.arrayBuffer()
 })
 
 const botWebhook = bot.webhookCallback('/api/telegram', {
