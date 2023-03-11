@@ -8,7 +8,6 @@ import type {
 	CreateChatCompletionResponse,
 	ChatCompletionRequestMessage,
 } from 'openai'
-import { fileTypeFromBuffer } from 'file-type'
 
 declare const process: {
 	env: {
@@ -184,6 +183,8 @@ bot.on(message('text'), async ctx => {
 
 bot.on(message('voice'), async ctx => {
 	if (ctx.chat.type !== 'private') return
+
+	const { fileTypeFromBuffer } = await import('file-type')
 
 	// This is necessary to make sure Vercel doesn't
 	// finish the request before the bot has sent all messages
