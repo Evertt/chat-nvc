@@ -8,6 +8,7 @@ import type {
 	CreateChatCompletionResponse,
 	ChatCompletionRequestMessage,
 } from 'openai'
+import { fileTypeFromBuffer } from 'file-type'
 
 declare const process: {
 	env: {
@@ -198,10 +199,12 @@ bot.on(message('voice'), async ctx => {
 	const voice = await ctx.telegram.getFileLink(ctx.message.voice.file_id)
 
 	const voiceRes = await fetch(voice)
-	const type = voiceRes.headers.get('content-type') // 'audio/ogg'
+	const voiceBuffer = await voiceRes.arrayBuffer()
+	
+	const type = await fileTypeFromBuffer(voiceBuffer)
+	await ctx.reply(`The voice message was of type ${type?.mime ?? 'unknown'}.`)
 
-	await ctx.reply(`The voice message was of type ${type}.`)
-	// const voiceBuffer = await voiceRes.arrayBuffer()
+	clearInterval(interval)
 })
 
 const botWebhook = bot.webhookCallback('/api/telegram', {
