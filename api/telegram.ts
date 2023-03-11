@@ -1,4 +1,6 @@
 import { Telegraf } from 'telegraf'
+import type { Context, NarrowedContext } from 'telegraf'
+import type * as tg from 'telegraf/src/core/types/typegram'
 import { message } from 'telegraf/filters'
 import { getSystemPrompt } from './.dep/handleAnswers'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
@@ -53,6 +55,107 @@ bot.help(ctx => ctx.reply(`
 	You can also force me to start over by typing /start.
 `.replace(/\s+/g, ' ')))
 
+type MessageUpdateCtx = NarrowedContext<
+	Context<tg.Update>,
+	tg.Update.MessageUpdate<Record<"text", any> & tg.Message.TextMessage>
+>
+
+const moderate = async (input: string) => {
+	const moderationRes = await fetch('https://api.openai.com/v1/moderations', {
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${OPENAI_KEY}`
+		},
+		method: 'POST',
+		body: JSON.stringify({ input })
+	})
+
+	const moderationData: CreateModerationResponse = await moderationRes.json()
+	const [results] = moderationData.results
+
+	if (results.flagged) {
+		const categories = Object.entries(results.categories)
+			.filter(([_, value]) => value)
+			.map(([category]) => category)
+			.join(', ')
+
+		return categories
+	}
+
+	return false
+}
+
+const getReply = async (ctx: MessageUpdateCtx) => {
+	let moderationResult = await moderate(ctx.message.text)
+	if (moderationResult) return `
+		Your message was flagged by OpenAI for ${moderationResult}.
+		Please try to rephrase your message. 🙏
+	`.replace(/\s+/g, ' ')
+
+	const messages = chats.get(ctx.chat.id)!
+	messages.push({
+		name: ctx.from.first_name,
+		message: ctx.message.text,
+		timestamp: Date.now()
+	})
+	
+	const chatMessages: ChatCompletionRequestMessage[] = messages.map(msg => (
+		{ role: msg.name === 'ChatNVC' ? 'assistant' : 'user', content: msg.message }
+	))
+
+	const systemPrompt = getSystemPrompt({
+		request: 'empathy',
+		names: [ctx.from.first_name],
+	})
+
+	chatMessages.unshift({ role: 'system', content: systemPrompt })
+
+	const chatRequestOpts: CreateChatCompletionRequest = {
+		model: 'gpt-3.5-turbo',
+		temperature: 0.9,
+		messages: chatMessages,
+	}
+
+	const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+		headers: {
+			Authorization: `Bearer ${OPENAI_KEY}`,
+			'Content-Type': 'application/json'
+		},
+		method: 'POST',
+		body: JSON.stringify(chatRequestOpts)
+	})
+
+	if (!chatResponse.ok) {
+		const err = await chatResponse.json()
+		throw new Error(err)
+	}
+
+	const completionResponse: CreateChatCompletionResponse = await chatResponse.json()
+	
+	const assistantResponse = completionResponse.choices[0]?.message?.content ?? ''
+
+	if (assistantResponse === '') {
+		throw new Error('OpenAI returned an empty response')
+	}
+
+	moderationResult = await moderate(assistantResponse)
+	if (moderationResult) return `
+		Sorry, I was about to say something highly inappropriate.
+		I don't know what happened.
+		Could you maybe try to rephrase your last message differently?
+		That might help me to formulate a more appropriate response.
+		Thank you. 🙏
+	`.replace(/\s+/g, ' ')
+
+	messages.push({
+		name: 'ChatNVC',
+		message: assistantResponse,
+		timestamp: Date.now()
+	})
+
+	return assistantResponse
+}
+
 bot.on(message('text'), async ctx => {
 	if (ctx.chat.type !== 'private') return
 	if (!chats.has(ctx.chat.id)) chats.set(ctx.chat.id, [])
@@ -68,89 +171,7 @@ bot.on(message('text'), async ctx => {
 		5100
 	)
 
-	const getReply = async () => {
-		const moderationRes = await fetch('https://api.openai.com/v1/moderations', {
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${OPENAI_KEY}`
-			},
-			method: 'POST',
-			body: JSON.stringify({
-				input: ctx.message.text
-			})
-		})
-
-		const moderationData: CreateModerationResponse = await moderationRes.json()
-		const [results] = moderationData.results
-
-		if (results.flagged) {
-			const categories = Object.entries(results.categories)
-				.filter(([_, value]) => value)
-				.map(([category]) => category)
-				.join(', ')
-
-			return `
-				Your message was flagged by OpenAI for ${categories}.
-				Please try to rephrase your message. 🙏
-			`.replace(/\s+/g, ' ')
-		}
-
-		const messages = chats.get(ctx.chat.id)!
-		messages.push({
-			name: ctx.from.first_name,
-			message: ctx.message.text,
-			timestamp: Date.now()
-		})
-		
-		const chatMessages: ChatCompletionRequestMessage[] = messages.map(msg => (
-			{ role: msg.name === 'ChatNVC' ? 'assistant' : 'user', content: msg.message }
-		))
-
-		const systemPrompt = getSystemPrompt({
-			request: 'empathy',
-			names: [ctx.from.first_name],
-		})
-
-		chatMessages.unshift({ role: 'system', content: systemPrompt })
-
-		const chatRequestOpts: CreateChatCompletionRequest = {
-			model: 'gpt-3.5-turbo',
-			temperature: 0.9,
-			messages: chatMessages,
-		}
-	
-		const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-			headers: {
-				Authorization: `Bearer ${OPENAI_KEY}`,
-				'Content-Type': 'application/json'
-			},
-			method: 'POST',
-			body: JSON.stringify(chatRequestOpts)
-		})
-
-		if (!chatResponse.ok) {
-			const err = await chatResponse.json()
-			throw new Error(err)
-		}
-
-		const completionResponse: CreateChatCompletionResponse = await chatResponse.json()
-		
-		const assistantResponse = completionResponse.choices[0]?.message?.content ?? ''
-
-		if (assistantResponse === '') {
-			throw new Error('OpenAI returned an empty response')
-		}
-
-		messages.push({
-			name: 'ChatNVC',
-			message: assistantResponse,
-			timestamp: Date.now()
-		})
-
-		return assistantResponse
-	}
-
-	await getReply()
+	await getReply(ctx)
 		.then(reply => ctx.reply(reply))
 		.catch(error => {
 			console.log("Error:", error)
