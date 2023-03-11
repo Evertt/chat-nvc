@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ChatWindow from '$lib/components/ChatWindow.svelte'
+	import IntroDataForm from '$lib/components/IntroDataForm.svelte'
 	import type { ChatCompletionRequestMessage } from 'openai'
 	import { SSE } from 'sse.js'
 
@@ -12,8 +13,8 @@
 	let chatMessages: ChatCompletionRequestMessage[] = []
 	let state: 'intro' | 'chat' = 'intro'
 
-	const introData = {
-		request: undefined as IntroData['request'],
+	const introData: IntroData & { readonly startingMessage: string } = {
+		request: undefined,
 		names: [''],
 		get startingMessage() {
 			return ({
@@ -103,56 +104,10 @@
 		<div class="flex flex-col gap-2">
 			<p class="text-center">Hi, I'm ChatNVC. I'm here to help.</p>
 
-			{#if introData.request === undefined}
-				<p class="text-center">What do you need?</p>
-				<div class="flex flex-col gap-2">
-					<button
-						class="btn btn-accent"
-						on:click={() => {
-							introData.request = 'empathy'
-							introData.names = ['']
-						}}
-					>
-						I need empathy
-					</button>
-					<button
-						class="btn btn-accent"
-						on:click={() => {
-							introData.request = 'mediation'
-							introData.names = ['', '']
-						}}
-					>
-						I need mediation
-					</button>
-				</div>
-			{:else}
-				<p class="text-center">
-					{introData.request === 'empathy' ? "What's your name?" : 'What are your names?'}
-				</p>
-
-				<form
-					class="flex flex-col gap-2"
-					on:submit|preventDefault={() => state = 'chat'}
-				>
-					{#each introData.names as name, i}
-						<!-- svelte-ignore a11y-autofocus -->
-						<input
-							class="input input-bordered"
-							type="text"
-							bind:value={introData.names[i]}
-							autocorrect="off"
-							spellcheck="false"
-							autocomplete="off"
-							list="autocompleteOff"
-							aria-autocomplete="none"
-							autofocus={i === 0}
-						/>
-					{/each}
-					<button class="input btn btn-accent" type="submit">
-						Continue
-					</button>
-				</form>
-			{/if}
+			<IntroDataForm on:submit={e => {
+				Object.assign(introData, e.detail)
+				state = 'chat'
+			}} />
 		</div>
 	{:else}
 		<ChatWindow

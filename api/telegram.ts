@@ -94,7 +94,7 @@ bot.on(message('text'), async ctx => {
 			return `
 				Your message was flagged by OpenAI for ${categories}.
 				Please try to rephrase your message. 🙏
-			`.replace(/^\n +|(\n) +/g, '$1')
+			`.replace(/\s+/g, ' ')
 		}
 
 		console.log('Message not flagged by OpenAI:', ctx.message.text)
