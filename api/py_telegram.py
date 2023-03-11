@@ -34,7 +34,7 @@ def generate_unique_name():
     return f"{str(uuid_value)}"
 
 
-def convert_text_to_speech(text, language_code='pt'):
+def convert_text_to_speech(text, language_code='en'):
     output_filepath = os.path.join(AUDIOS_DIR, f"{generate_unique_name()}.mp3")
     tts = gtts.gTTS(text=text, lang=language_code)
     tts.save(output_filepath)
