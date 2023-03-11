@@ -57,8 +57,8 @@ bot.on(message('text'), async ctx => {
 	if (ctx.chat.type !== 'private') return
 	if (!chats.has(ctx.chat.id)) chats.set(ctx.chat.id, [])
 
-	/** @ts-expect-error ignore this error */
-	const response: VercelResponse = ctx.telegram.response
+	// /** @ts-expect-error ignore this error */
+	// const response: VercelResponse = ctx.telegram.response
 	/** @ts-expect-error ignore this error */
 	ctx.telegram.response = undefined
 
@@ -156,8 +156,8 @@ bot.on(message('text'), async ctx => {
 		.then(reply => {
 			console.log("Reply:", reply)
 
-			/** @ts-expect-error ignore this error */
-			ctx.telegram.response = response
+			// /** @ts-expect-error ignore this error */
+			// ctx.telegram.response = response
 
 			ctx.reply(reply)
 		})
