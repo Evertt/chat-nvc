@@ -269,8 +269,20 @@ bot.on(message('voice'), async ctx => {
 
 	const transcription = await transcriptionResponse.text()
 
-	clearInterval(interval)
-	await ctx.reply(transcription)
+	await getReply(ctx.chat.id, ctx.from.first_name, transcription)
+		.then(reply => ctx.reply(reply))
+		.catch(error => {
+			console.log("Error:", error)
+	
+			ctx.reply(oneLine`
+				Something went wrong. It's possible that OpenAI's servers are overloaded.
+				Please try again in a few seconds or minutes. 🙏
+			`)
+		})
+		.finally(() => {
+			clearInterval(interval)
+			cleanUpChats()
+		})
 })
 
 const botWebhook = bot.webhookCallback('/api/telegram', {
