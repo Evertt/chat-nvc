@@ -1,3 +1,5 @@
+import { oneLine } from 'common-tags'
+
 const basePrompt =
   'You are a professional nonviolent communication trainer.'
 
@@ -25,9 +27,9 @@ export const getSystemPrompt = (introData: IntroData) => {
   const { request, names } = introData
   const nameString = names.join(' and ')
 
-  return `
+  return oneLine`
     ${basePrompt}
     You are speaking to ${nameString}.
     ${basePrompts[request!]}
-  `.replace(/^\n +|(\n) +/g, '$1')
+  `
 }
