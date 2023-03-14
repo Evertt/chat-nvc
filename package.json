@@ -55,6 +55,7 @@
 		"gpt3-tokenizer": "^1.1.5",
 		"node-fetch": "^3.3.1",
 		"openai": "^3.2.1",
+		"redis": "^4.6.5",
 		"sse.js": "^0.6.1",
 		"telegraf": "^4.12.1"
 	}
