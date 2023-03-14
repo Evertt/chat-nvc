@@ -280,7 +280,7 @@ bot.on(message('text'), async ctx => {
 	)
 
 	await getReply(ctx.session.messages, ctx.from.first_name, ctx.message.text, 'text')
-		.then(reply => ctx.replyWithMarkdownV2(reply))
+		.then(reply => ctx.replyWithHTML(reply))
 		.catch(error => {
 			console.log("Error:", error)
 	
@@ -331,7 +331,7 @@ bot.on(message('voice'), async ctx => {
 	const transcription = await transcriptionResponse.text()
 
 	await getReply(ctx.session.messages, ctx.from.first_name, transcription, 'voice')
-		.then(reply => ctx.replyWithMarkdownV2(reply))
+		.then(reply => ctx.replyWithHTML(reply))
 		.catch(error => {
 			console.log("Error:", error)
 	

@@ -3,27 +3,23 @@ import { oneLine, stripIndent } from 'common-tags'
 const basePrompt =
   'You are a professional nonviolent communication trainer.'
 
-const markdownExplanation = stripIndent`
-  You will write all your messages in a markdown format.
-  That means you will need to escape all of the following characters with a \ if you want to display them as normal characters:
-  _*[]()~\`>#+-=|{}.!
+const htmlExplanation = stripIndent`
+  You will format all your responses using a limited html format. These are all the tags you can use:
 
-  Here are some examples of correct markdown syntax:
-  *bold text with an escaped \* character *
-  _italic text_
-  __underline__
-  ~strikethrough~
-  ||spoiler||
-  *bold _italic bold ~italic bold strikethrough ||italic bold strikethrough spoiler||~ __underline italic bold___ bold*
-  [inline URL](http://www.example.com/)
-  [inline mention of a user](tg://user?id=123456789)
-  \`inline fixed-width code\`
-  \`\`\`
-  pre-formatted fixed-width code block
-  \`\`\`
-  \`\`\`python
-  # pre-formatted fixed-width code block written in the Python programming language
-  \`\`\`
+  <b>bold</b>
+  <i>italic</i>
+  <u>underline</u>
+  <s>strikethrough</s>
+  <tg-spoiler>spoiler</tg-spoiler>
+  <a href="http://www.example.com/">inline URL</a>
+  <a href="tg://user?id=123456789">inline mention of a user</a>
+  <code>inline fixed-width code</code>
+  <pre>pre-formatted fixed-width code block</pre>
+  <pre><code class="language-python">
+    # pre-formatted fixed-width code block written in the Python programming language
+  </code></pre>
+  
+  You cannot use markdown format. You can only use the html tags referenced above.
 `
 
 const basePrompts = {
@@ -55,6 +51,6 @@ export const getSystemPrompt = (introData: IntroData) => {
   return oneLine`
     ${basePrompt} You are speaking to ${nameString}.
     ${basePrompts[request!]}
-    ${markdownExplanation}
+    ${htmlExplanation}
   `
 }
