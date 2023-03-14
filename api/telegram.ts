@@ -60,7 +60,12 @@ const {
 const Supabase = <Session>() => {
 	const supabase = createClient(
 		`https://db.oayqreivowdwqabufjyj.supabase.co:6543/postgres?pgbouncer=true`,
-		SUPABASE_KEY
+		SUPABASE_KEY,
+		{
+			global: {
+				fetch: fetch.bind(globalThis),
+			}
+		}
 	)
 
 	return {
