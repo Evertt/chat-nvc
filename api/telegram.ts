@@ -59,7 +59,7 @@ const {
 
 const Supabase = <Session>() => {
 	const supabase = createClient(
-		`postgres://postgres:${SUPABASE_PASSWORD}@db.oayqreivowdwqabufjyj.supabase.co:6543/postgres`,
+		`postgres://postgres:@db.oayqreivowdwqabufjyj.supabase.co:6543/postgres`,
 		SUPABASE_KEY
 	)
 
