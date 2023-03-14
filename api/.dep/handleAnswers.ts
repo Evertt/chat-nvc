@@ -1,7 +1,30 @@
-import { oneLine } from 'common-tags'
+import { oneLine, stripIndent } from 'common-tags'
 
 const basePrompt =
   'You are a professional nonviolent communication trainer.'
+
+const markdownExplanation = stripIndent`
+  You will write all your messages in a markdown format.
+  That means you will need to escape all of the following characters with a \ if you want to display them as normal characters:
+  _*[]()~\`>#+-=|{}.!
+
+  Here are some examples of correct markdown syntax:
+  *bold text with an escaped \* character *
+  _italic text_
+  __underline__
+  ~strikethrough~
+  ||spoiler||
+  *bold _italic bold ~italic bold strikethrough ||italic bold strikethrough spoiler||~ __underline italic bold___ bold*
+  [inline URL](http://www.example.com/)
+  [inline mention of a user](tg://user?id=123456789)
+  \`inline fixed-width code\`
+  \`\`\`
+  pre-formatted fixed-width code block
+  \`\`\`
+  \`\`\`python
+  # pre-formatted fixed-width code block written in the Python programming language
+  \`\`\`
+`
 
 const basePrompts = {
   empathy: `
@@ -30,8 +53,8 @@ export const getSystemPrompt = (introData: IntroData) => {
   const nameString = names.join(' and ')
 
   return oneLine`
-    ${basePrompt}
-    You are speaking to ${nameString}.
+    ${basePrompt} You are speaking to ${nameString}.
     ${basePrompts[request!]}
+    ${markdownExplanation}
   `
 }
