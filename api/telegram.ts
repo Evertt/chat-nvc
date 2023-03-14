@@ -1,8 +1,6 @@
 import { Readable, Writable } from 'stream'
 import { Telegraf, session, type Context } from 'telegraf'
 import { createClient } from '@supabase/supabase-js'
-// import { Redis } from "@telegraf/session/redis"
-// import { type SessionStore } from "@telegraf/session/types"
 import type { Update } from "telegraf/types"
 import { oneLine, oneLineCommaListsAnd } from 'common-tags'
 import { message } from 'telegraf/filters'
@@ -79,23 +77,23 @@ const Supabase = <Session>() => {
 		},
 
 		async set(key: string, session: Session) {
-			console.log("Storing a session in supabase:", key, session)
-
 			const { error } = await supabase
 				.from('telegraf-sessions')
 				.upsert({ key, session })
 				.single()
 
-			return error ? { error } : true
+				console.log("Stored a session in supabase:", { key, session, error })
+
+				return error ? { error } : true
 		},
 
 		async delete(key: string) {
-			console.log("Deleting a session from supabase:", key)
-
 			const { error } = await supabase
 				.from('telegraf-sessions')
 				.delete()
 				.eq('key', key)
+
+			console.log("Deleted a session from supabase:", { key, error })
 
 			return error ? { error } : true
 		}
@@ -204,9 +202,24 @@ const moderate = async (input: string) => {
 	return false
 }
 
-const getReply = async (messages: Message[], name: string, text: string, type: 'text' | 'voice') => {
-	console.log("messages to reply to:", messages)
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
+const repeat = (fn: () => Promise<any>, ms: number) => {
+	let stop = false
+
+	const innerFn = async () => {
+		while (!stop) {
+			await fn()
+			await sleep(ms)
+		}
+	}
+
+	innerFn()
+
+	return () => stop = true
+}
+
+const getReply = async (messages: Message[], name: string, text: string, type: 'text' | 'voice') => {
 	let moderationResult = await moderate(text)
 	if (moderationResult) return oneLineCommaListsAnd`
 		Your message was flagged by OpenAI for ${moderationResult}.
@@ -281,8 +294,7 @@ const getReply = async (messages: Message[], name: string, text: string, type: '
 bot.on(message('text'), async ctx => {
 	if (ctx.chat.type !== 'private') return
 
-	ctx.sendChatAction('typing')
-	const interval = setInterval(
+	const stopTyping = repeat(
 		() => ctx.sendChatAction('typing'),
 		5100
 	)
@@ -292,13 +304,13 @@ bot.on(message('text'), async ctx => {
 		.catch(error => {
 			console.log("Error:", error)
 	
-			ctx.reply(oneLine`
+			return ctx.reply(oneLine`
 				Something went wrong. It's possible that OpenAI's servers are overloaded.
 				Please try again in a few seconds or minutes. 🙏
 			`)
 		})
 		.finally(() => {
-			clearInterval(interval)
+			stopTyping()
 			// cleanUpChats()
 		})
 })
@@ -306,8 +318,7 @@ bot.on(message('text'), async ctx => {
 bot.on(message('voice'), async ctx => {
 	if (ctx.chat.type !== 'private') return
 
-	ctx.sendChatAction('typing')
-	const interval = setInterval(
+	const stopTyping = repeat(
 		() => ctx.sendChatAction('typing'),
 		5100
 	)
@@ -343,13 +354,13 @@ bot.on(message('voice'), async ctx => {
 		.catch(error => {
 			console.log("Error:", error)
 	
-			ctx.reply(oneLine`
+			return ctx.reply(oneLine`
 				Something went wrong. It's possible that OpenAI's servers are overloaded.
 				Please try again in a few seconds or minutes. 🙏
 			`)
 		})
 		.finally(() => {
-			clearInterval(interval)
+			stopTyping()
 			// cleanUpChats()
 		})
 })
