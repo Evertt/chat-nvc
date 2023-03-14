@@ -59,7 +59,7 @@ const {
 
 const Supabase = <Session>() => {
 	const supabase = createClient(
-		`https://db.oayqreivowdwqabufjyj.supabase.co:6543/?pgloader=true&pgbouncer=true&pool=true`,
+		`https://db.oayqreivowdwqabufjyj.supabase.co:6543/postgres?pgbouncer=true`,
 		SUPABASE_KEY
 	)
 
