@@ -20,12 +20,6 @@ if (!pathToFfmpeg) {
 	throw new Error('ffmpeg-static not found')
 }
 
-interface MyContext <U extends Update = Update> extends Context<U> {
-	session: {
-		count: number
-	},
-}
-
 declare const process: {
 	env: {
 		OPENAI_KEY: string
@@ -40,6 +34,12 @@ interface Message {
 	timestamp: number
 }
 
+interface ContextWithSession <U extends Update = Update> extends Context<U> {
+	session: {
+		messages: Message[]
+	},
+}
+
 const BOT_NAME = 'ChatNVC'
 const chats = new Map<number, Message[]>()
 
@@ -49,13 +49,13 @@ const {
 	TELEGRAM_WEBBOOK_TOKEN
 } = process.env
 
-const bot = new Telegraf<MyContext>(TELEGRAM_KEY, {
+const bot = new Telegraf<ContextWithSession>(TELEGRAM_KEY, {
 	telegram: { webhookReply: false }
 })
 
 bot.use(session({
 	defaultSession: () => ({
-		count: 0
+		messages: [] as Message[]
 	})
 }))
 
@@ -107,9 +107,9 @@ bot.start(async ctx => {
 
 	const greeting = `Hi ${ctx.from.first_name}, what would you like empathy for today?`
 
-	chats.set(ctx.chat.id, [
+	ctx.session.messages = [
 		{ name: BOT_NAME, message: greeting, timestamp: Date.now() }
-	])
+	]
 
 	await ctx.reply(greeting)
 })
@@ -145,16 +145,13 @@ const moderate = async (input: string) => {
 	return false
 }
 
-const getReply = async (chatId: number, name: string, text: string) => {
-	if (!chats.has(chatId)) chats.set(chatId, [])
-
+const getReply = async (messages: Message[], name: string, text: string) => {
 	let moderationResult = await moderate(text)
 	if (moderationResult) return oneLineCommaListsAnd`
 		Your message was flagged by OpenAI for ${moderationResult}.
 		Please try to rephrase your message. 🙏
 	`
 
-	const messages = chats.get(chatId)!
 	messages.push({
 		name: name,
 		message: text,
@@ -221,18 +218,13 @@ const getReply = async (chatId: number, name: string, text: string) => {
 bot.on(message('text'), async ctx => {
 	if (ctx.chat.type !== 'private') return
 
-	// // This is necessary to make sure Vercel doesn't
-	// // finish the request before the bot has sent all messages
-	// /** @ts-expect-error ignore this error */
-	// ctx.telegram.response = undefined
-
 	ctx.sendChatAction('typing')
 	const interval = setInterval(
 		() => ctx.sendChatAction('typing'),
 		5100
 	)
 
-	await getReply(ctx.chat.id, ctx.from.first_name, ctx.message.text)
+	await getReply(ctx.session.messages, ctx.from.first_name, ctx.message.text)
 		.then(reply => ctx.reply(reply))
 		.catch(error => {
 			console.log("Error:", error)
@@ -244,17 +236,12 @@ bot.on(message('text'), async ctx => {
 		})
 		.finally(() => {
 			clearInterval(interval)
-			cleanUpChats()
+			// cleanUpChats()
 		})
 })
 
 bot.on(message('voice'), async ctx => {
 	if (ctx.chat.type !== 'private') return
-
-	// This is necessary to make sure Vercel doesn't
-	// finish the request before the bot has sent all messages
-	/** @ts-expect-error ignore this error */
-	ctx.telegram.response = undefined
 
 	ctx.sendChatAction('typing')
 	const interval = setInterval(
@@ -285,7 +272,7 @@ bot.on(message('voice'), async ctx => {
 
 	const transcription = await transcriptionResponse.text()
 
-	await getReply(ctx.chat.id, ctx.from.first_name, transcription)
+	await getReply(ctx.session.messages, ctx.from.first_name, transcription)
 		.then(reply => ctx.reply(reply))
 		.catch(error => {
 			console.log("Error:", error)
@@ -297,7 +284,7 @@ bot.on(message('voice'), async ctx => {
 		})
 		.finally(() => {
 			clearInterval(interval)
-			cleanUpChats()
+			// cleanUpChats()
 		})
 })
 
@@ -305,27 +292,27 @@ const botWebhook = bot.webhookCallback('/api/telegram', {
 	secretToken: TELEGRAM_WEBBOOK_TOKEN
 })
 
-function cleanUpChats() {
-	const now = Date.now()
+// function cleanUpChats() {
+// 	const now = Date.now()
 
-	for (const [chatId, messages] of chats.entries()) {
-		const i = messages.findIndex(msg =>
-			now - msg.timestamp < 1000 * 60 * 60 // 1 hour
-		)
+// 	for (const [chatId, messages] of chats.entries()) {
+// 		const i = messages.findIndex(msg =>
+// 			now - msg.timestamp < 1000 * 60 * 60 // 1 hour
+// 		)
 
-		if (i === 0) continue
-		else if (i === -1) {
-			chats.delete(chatId)
-			bot.telegram.sendMessage(
-				chatId,
-				oneLine`Just FYI, I just deleted our chat history from my memory.
-				So now if you would send me a new message, we would be starting over.
-				I won't even remember that I sent you this message.`
-			)
-		}
-		else chats.set(chatId, messages.slice(i))
-	}
-}
+// 		if (i === 0) continue
+// 		else if (i === -1) {
+// 			chats.delete(chatId)
+// 			bot.telegram.sendMessage(
+// 				chatId,
+// 				oneLine`Just FYI, I just deleted our chat history from my memory.
+// 				So now if you would send me a new message, we would be starting over.
+// 				I won't even remember that I sent you this message.`
+// 			)
+// 		}
+// 		else chats.set(chatId, messages.slice(i))
+// 	}
+// }
 
 export default async (req: VercelRequest, res: VercelResponse) => {
 	await botWebhook(req, res)
