@@ -1,6 +1,7 @@
 import { Readable, Writable } from 'stream'
 import { Telegraf, session, type Context } from 'telegraf'
-import { createClient } from '@supabase/supabase-js'
+import { Redis } from '@telegraf/session/redis'
+// import { createClient } from '@supabase/supabase-js'
 import type { Update } from "telegraf/types"
 import { oneLine, oneLineCommaListsAnd } from 'common-tags'
 import { message } from 'telegraf/filters'
@@ -23,6 +24,8 @@ if (!pathToFfmpeg) {
 
 declare const process: {
 	env: {
+		REDIS_USERNAME: string,
+		REDIS_PASSWORD: string,
 		SUPABASE_KEY: string
 		SUPABASE_PASSWORD: string
 		OPENAI_KEY: string
@@ -52,60 +55,66 @@ const BOT_NAME = 'ChatNVC'
 const {
 	OPENAI_KEY,
 	TELEGRAM_KEY,
+	REDIS_USERNAME,
+	REDIS_PASSWORD,
 	SUPABASE_KEY,
 	SUPABASE_PASSWORD,
 	TELEGRAM_WEBBOOK_TOKEN
 } = process.env
 
-const Supabase = <Session>() => {
-	const supabase = createClient(
-		`https://db.oayqreivowdwqabufjyj.supabase.co:6543/postgres?pgbouncer=true`,
-		SUPABASE_KEY,
-	)
+// const Supabase = <Session>() => {
+// 	const supabase = createClient(
+// 		`https://db.oayqreivowdwqabufjyj.supabase.co:6543/postgres?pgbouncer=true`,
+// 		SUPABASE_KEY,
+// 	)
 
-	return {
-		async get(key: string) {
-			const { data } = await supabase
-				.from('telegraf-sessions')
-				.select('session')
-				.eq('key', key)
-				.single()
+// 	return {
+// 		async get(key: string) {
+// 			const { data } = await supabase
+// 				.from('telegraf-sessions')
+// 				.select('session')
+// 				.eq('key', key)
+// 				.single()
 
-				console.log("Retrieved a session from supabase:", key, data?.session)
+// 				console.log("Retrieved a session from supabase:", key, data?.session)
 			
-				return data ? data.session as Session : undefined
-		},
+// 				return data ? data.session as Session : undefined
+// 		},
 
-		async set(key: string, session: Session) {
-			const { error } = await supabase
-				.from('telegraf-sessions')
-				.upsert({ key, session })
-				.single()
+// 		async set(key: string, session: Session) {
+// 			const { error } = await supabase
+// 				.from('telegraf-sessions')
+// 				.upsert({ key, session })
+// 				.single()
 
-				console.log("Stored a session in supabase:", { key, session, error })
+// 				console.log("Stored a session in supabase:", { key, session, error })
 
-				return error ? { error } : true
-		},
+// 				return error ? { error } : true
+// 		},
 
-		async delete(key: string) {
-			const { error } = await supabase
-				.from('telegraf-sessions')
-				.delete()
-				.eq('key', key)
+// 		async delete(key: string) {
+// 			const { error } = await supabase
+// 				.from('telegraf-sessions')
+// 				.delete()
+// 				.eq('key', key)
 
-			console.log("Deleted a session from supabase:", { key, error })
+// 			console.log("Deleted a session from supabase:", { key, error })
 
-			return error ? { error } : true
-		}
-	}
-}
+// 			return error ? { error } : true
+// 		}
+// 	}
+// }
 
 const bot = new Telegraf<ContextWithSession>(TELEGRAM_KEY, {
 	telegram: { webhookReply: false }
 })
 
+const store = Redis<Session>({
+	url: `redis://${REDIS_USERNAME}:${REDIS_PASSWORD}@redis-13943.c251.east-us-mz.azure.cloud.redislabs.com:13943`,
+})
+
 bot.use(session({
-	store: Supabase<Session>(),
+	store,
 	defaultSession: () => ({
 		messages: [] as Message[]
 	})
