@@ -1,5 +1,8 @@
 import { Readable, Writable } from 'stream'
 import { Telegraf, session, type Context } from 'telegraf'
+import { createClient } from '@supabase/supabase-js'
+// import { Redis } from "@telegraf/session/redis"
+// import { type SessionStore } from "@telegraf/session/types"
 import type { Update } from "telegraf/types"
 import { oneLine, oneLineCommaListsAnd } from 'common-tags'
 import { message } from 'telegraf/filters'
@@ -22,6 +25,8 @@ if (!pathToFfmpeg) {
 
 declare const process: {
 	env: {
+		SUPABASE_KEY: string
+		SUPABASE_PASSWORD: string
 		OPENAI_KEY: string
 		TELEGRAM_KEY: string
 		TELEGRAM_WEBBOOK_TOKEN: string
@@ -32,28 +37,71 @@ interface Message {
 	name: string
 	message: string
 	timestamp: number
+	type: 'text' | 'voice'
+}
+
+interface Session {
+	messages: Message[]
 }
 
 interface ContextWithSession <U extends Update = Update> extends Context<U> {
-	session: {
-		messages: Message[]
-	},
+	session: Session,
 }
 
 const BOT_NAME = 'ChatNVC'
-const chats = new Map<number, Message[]>()
+// const chats = new Map<number, Message[]>()
 
 const {
 	OPENAI_KEY,
 	TELEGRAM_KEY,
+	SUPABASE_KEY,
+	SUPABASE_PASSWORD,
 	TELEGRAM_WEBBOOK_TOKEN
 } = process.env
+
+const Supabase = <Session>() => {
+	const supabase = createClient(
+		`postgres://postgres:${SUPABASE_PASSWORD}@db.oayqreivowdwqabufjyj.supabase.co:6543/postgres`,
+		SUPABASE_KEY
+	)
+
+	return {
+		async get(key: string) {
+			const { data } = await supabase
+				.from('telegraf-sessions')
+				.select('session')
+				.eq('key', key)
+				.single()
+
+			return data ? data.session as Session : undefined
+		},
+
+		async set(key: string, session: Session) {
+			const { error } = await supabase
+				.from('telegraf-sessions')
+				.upsert({ key, session })
+				.single()
+
+			return error ? { error } : true
+		},
+
+		async delete(key: string) {
+			const { error } = await supabase
+				.from('telegraf-sessions')
+				.delete()
+				.eq('key', key)
+
+			return error ? { error } : true
+		}
+	}
+}
 
 const bot = new Telegraf<ContextWithSession>(TELEGRAM_KEY, {
 	telegram: { webhookReply: false }
 })
 
 bot.use(session({
+	store: Supabase<Session>(),
 	defaultSession: () => ({
 		messages: [] as Message[]
 	})
@@ -108,7 +156,12 @@ bot.start(async ctx => {
 	const greeting = `Hi ${ctx.from.first_name}, what would you like empathy for today?`
 
 	ctx.session.messages = [
-		{ name: BOT_NAME, message: greeting, timestamp: Date.now() }
+		{
+			type: 'text',
+			name: BOT_NAME,
+			message: greeting,
+			timestamp: Date.now()
+		}
 	]
 
 	await ctx.reply(greeting)
@@ -145,7 +198,7 @@ const moderate = async (input: string) => {
 	return false
 }
 
-const getReply = async (messages: Message[], name: string, text: string) => {
+const getReply = async (messages: Message[], name: string, text: string, type: 'text' | 'voice') => {
 	let moderationResult = await moderate(text)
 	if (moderationResult) return oneLineCommaListsAnd`
 		Your message was flagged by OpenAI for ${moderationResult}.
@@ -153,6 +206,7 @@ const getReply = async (messages: Message[], name: string, text: string) => {
 	`
 
 	messages.push({
+		type,
 		name: name,
 		message: text,
 		timestamp: Date.now()
@@ -207,6 +261,7 @@ const getReply = async (messages: Message[], name: string, text: string) => {
 	`
 
 	messages.push({
+		type: 'text',
 		name: BOT_NAME,
 		message: assistantResponse,
 		timestamp: Date.now()
@@ -224,8 +279,8 @@ bot.on(message('text'), async ctx => {
 		5100
 	)
 
-	await getReply(ctx.session.messages, ctx.from.first_name, ctx.message.text)
-		.then(reply => ctx.reply(reply))
+	await getReply(ctx.session.messages, ctx.from.first_name, ctx.message.text, 'text')
+		.then(reply => ctx.replyWithMarkdownV2(reply))
 		.catch(error => {
 			console.log("Error:", error)
 	
@@ -262,18 +317,21 @@ bot.on(message('voice'), async ctx => {
 	formData.append('response_format', 'text')
   formData.append('file', voiceWebmBlob, filePath)
 
-	const transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-		headers: {
-			Authorization: `Bearer ${OPENAI_KEY}`,
-		},
-		method: 'POST',
-		body: formData
-	})
+	const transcriptionResponse = await fetch(
+		'https://api.openai.com/v1/audio/transcriptions',
+		{
+			headers: {
+				Authorization: `Bearer ${OPENAI_KEY}`,
+			},
+			method: 'POST',
+			body: formData
+		}
+	)
 
 	const transcription = await transcriptionResponse.text()
 
-	await getReply(ctx.session.messages, ctx.from.first_name, transcription)
-		.then(reply => ctx.reply(reply))
+	await getReply(ctx.session.messages, ctx.from.first_name, transcription, 'voice')
+		.then(reply => ctx.replyWithMarkdownV2(reply))
 		.catch(error => {
 			console.log("Error:", error)
 	

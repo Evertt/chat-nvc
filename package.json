@@ -46,6 +46,8 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@supabase/supabase-js": "^2.10.0",
+		"@telegraf/session": "2.0.0-beta.6",
 		"common-tags": "^1.8.2",
 		"ffmpeg-static": "^5.1.0",
 		"ffprobe-static": "^3.1.0",
