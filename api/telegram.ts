@@ -1,5 +1,6 @@
 import { Readable, Writable } from 'stream'
-import { Telegraf } from 'telegraf'
+import { Telegraf, session, type Context } from 'telegraf'
+import type { Update } from "telegraf/types"
 import { oneLine, oneLineCommaListsAnd } from 'common-tags'
 import { message } from 'telegraf/filters'
 import { getSystemPrompt } from './.dep/handleAnswers'
@@ -17,6 +18,12 @@ import { path as pathToFFprobe } from 'ffprobe-static'
 
 if (!pathToFfmpeg) {
 	throw new Error('ffmpeg-static not found')
+}
+
+interface MyContext <U extends Update = Update> extends Context<U> {
+	session: {
+		count: number
+	},
 }
 
 declare const process: {
@@ -42,7 +49,16 @@ const {
 	TELEGRAM_WEBBOOK_TOKEN
 } = process.env
 
-const bot = new Telegraf(TELEGRAM_KEY)
+const bot = new Telegraf<MyContext>(TELEGRAM_KEY, {
+	telegram: { webhookReply: false }
+})
+
+bot.use(session({
+	defaultSession: () => ({
+		count: 0
+	})
+}))
+
 // const host = 'https://chat-nvc.vercel.app'
 
 const convertOggOpusToWebm = async (opusAudioData: Buffer | ArrayBuffer) => {
@@ -205,10 +221,10 @@ const getReply = async (chatId: number, name: string, text: string) => {
 bot.on(message('text'), async ctx => {
 	if (ctx.chat.type !== 'private') return
 
-	// This is necessary to make sure Vercel doesn't
-	// finish the request before the bot has sent all messages
-	/** @ts-expect-error ignore this error */
-	ctx.telegram.response = undefined
+	// // This is necessary to make sure Vercel doesn't
+	// // finish the request before the bot has sent all messages
+	// /** @ts-expect-error ignore this error */
+	// ctx.telegram.response = undefined
 
 	ctx.sendChatAction('typing')
 	const interval = setInterval(
