@@ -73,10 +73,14 @@ const Supabase = <Session>() => {
 				.eq('key', key)
 				.single()
 
-			return data ? data.session as Session : undefined
+				console.log("Retrieved a session from supabase:", key, data?.session)
+			
+				return data ? data.session as Session : undefined
 		},
 
 		async set(key: string, session: Session) {
+			console.log("Storing a session in supabase:", key, session)
+
 			const { error } = await supabase
 				.from('telegraf-sessions')
 				.upsert({ key, session })
@@ -86,6 +90,8 @@ const Supabase = <Session>() => {
 		},
 
 		async delete(key: string) {
+			console.log("Deleting a session from supabase:", key)
+
 			const { error } = await supabase
 				.from('telegraf-sessions')
 				.delete()
@@ -199,6 +205,8 @@ const moderate = async (input: string) => {
 }
 
 const getReply = async (messages: Message[], name: string, text: string, type: 'text' | 'voice') => {
+	console.log("messages to reply to:", messages)
+
 	let moderationResult = await moderate(text)
 	if (moderationResult) return oneLineCommaListsAnd`
 		Your message was flagged by OpenAI for ${moderationResult}.
