@@ -98,7 +98,7 @@
 <div class="flex flex-col pt-4 w-full px-8 items-center gap-2">
 	<div>
 		<h1 class="text-2xl font-bold w-full text-center">ChatNVC</h1>
-		<h2>
+		<h2 class="text-xl font-bold w-full text-center mb-2">
 			ChatNVC is now also available as a telegram bot!<br>
 			I will be focussing all my attention on improving that version.<br>
 			So soon this website will no longer be online.<br>
