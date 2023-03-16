@@ -59,7 +59,7 @@ const {
 	REDIS_PASSWORD,
 	SUPABASE_KEY,
 	SUPABASE_PASSWORD,
-	TELEGRAM_WEBBOOK_TOKEN
+	TELEGRAM_WEBBOOK_TOKEN,
 } = process.env
 
 // const Supabase = <Session>() => {
@@ -163,11 +163,14 @@ const convertOggOpusToWebm = async (opusAudioData: Buffer | ArrayBuffer) => {
 }
 
 bot.start(async ctx => {
+	console.log('start command')
+
 	if (ctx.chat.type !== 'private')
 		return ctx.reply('Please write to me in a private chat 🙏')
 
 	const greeting = `Hi ${ctx.from.first_name}, what would you like empathy for today?`
 
+	console.log('Resetting session to start with greeting.')
 	ctx.session.messages = [
 		{
 			type: 'text',
@@ -177,7 +180,9 @@ bot.start(async ctx => {
 		}
 	]
 
+	console.log('Sending greeting.')
 	await ctx.reply(greeting)
+	console.log('Greeting sent.')
 })
 
 bot.help(ctx => ctx.reply(oneLine`
@@ -402,4 +407,5 @@ const botWebhook = bot.webhookCallback('/api/telegram', {
 
 export default async (req: VercelRequest, res: VercelResponse) => {
 	await botWebhook(req, res)
+	res.end()
 }
