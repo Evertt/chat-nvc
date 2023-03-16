@@ -416,20 +416,23 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 			.then(() => {
 				console.log('success')
 
-				if (res.writable) {
+				if (res.writable && !res.writableEnded) {
 					res.end('success')
 				}
 
 				resolve(res)
 			})
-			.catch(reason => reject(reason))
+			.catch(reason => {
+				console.log('error:', reason)
+				resolve(res)
+			})
 	})
 
 	const timeout = new Promise<VercelResponse>(resolve => {
 		sleep(9000).then(() => {
 			console.log('timeout')
 
-			if (res.writable) {
+			if (res.writable && !res.writableEnded) {
 				res.end('timeout')
 			}
 
