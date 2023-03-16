@@ -451,5 +451,5 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 		})
 	})
 
-	return await Promise.race([generateResponse, timeout])
+	await Promise.race([generateResponse, timeout])
 }
