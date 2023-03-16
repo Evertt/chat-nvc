@@ -57,8 +57,8 @@ const {
 	TELEGRAM_KEY,
 	REDIS_USERNAME,
 	REDIS_PASSWORD,
-	SUPABASE_KEY,
-	SUPABASE_PASSWORD,
+	// SUPABASE_KEY,
+	// SUPABASE_PASSWORD,
 	TELEGRAM_WEBBOOK_TOKEN,
 } = process.env
 
@@ -105,14 +105,17 @@ const {
 // 	}
 // }
 
+console.log('Instantiating Telegraf bot...')
 const bot = new Telegraf<ContextWithSession>(TELEGRAM_KEY, {
 	telegram: { webhookReply: false }
 })
 
+console.log('Instantiating Redis store...')
 const store = Redis<Session>({
 	url: `redis://${REDIS_USERNAME}:${REDIS_PASSWORD}@redis-13943.c251.east-us-mz.azure.cloud.redislabs.com:13943`,
 })
 
+console.log('Setting up the bot with a session using the Redis store...')
 bot.use(session({
 	store,
 	defaultSession: () => ({
@@ -234,6 +237,8 @@ const repeat = (fn: () => Promise<any>, ms: number) => {
 }
 
 const getReply = async (messages: Message[], name: string, text: string, type: 'text' | 'voice') => {
+	console.log('Generating reply to:', text)
+
 	let moderationResult = await moderate(text)
 	if (moderationResult) return oneLineCommaListsAnd`
 		Your message was flagged by OpenAI for ${moderationResult}.
@@ -406,6 +411,21 @@ const botWebhook = bot.webhookCallback('/api/telegram', {
 // }
 
 export default async (req: VercelRequest, res: VercelResponse) => {
-	await botWebhook(req, res)
-	res.end()
+	const generateResponse = new Promise<VercelResponse>((resolve, reject) => {
+		botWebhook(req, res)
+			.then(() => {
+				console.log('success')
+				resolve(res.end('success'))
+			})
+			.catch(reason => reject(reason))
+	})
+
+	const timeout = new Promise<VercelResponse>(resolve => {
+		sleep(9000).then(() => {
+			console.log('timeout')
+			resolve(res.end('timeout'))
+		})
+	})
+
+	await Promise.race([generateResponse, timeout])
 }
