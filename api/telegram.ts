@@ -220,7 +220,7 @@ const moderate = async (input: string) => {
 }
 
 const sleep = (ms: number) => new Promise<string>(
-	resolve => setTimeout(resolve('timeout'), ms)
+	resolve => setTimeout(() => resolve('timeout'), ms)
 )
 
 const repeat = (fn: () => Promise<any>, ms: number) => {
@@ -323,7 +323,7 @@ bot.on(message('text'), async ctx => {
 	const handleError = (error: any) => {
 		console.log("Reply error:", error)
 	
-		return ctx.reply(oneLine`
+		ctx.reply(oneLine`
 			Something went wrong. It's possible that OpenAI's servers are overloaded.
 			Please try again in a few seconds or minutes. 🙏
 		`)
@@ -335,7 +335,7 @@ bot.on(message('text'), async ctx => {
 	const timeout = sleep(8000)
 		.then(() => { throw "timeout" })
 
-	return await Promise
+	await Promise
 		.race([generateReply, timeout])
 		.catch(handleError)
 		.finally(() => {
@@ -421,35 +421,21 @@ const botWebhook = bot.webhookCallback('/api/telegram', {
 // }
 
 export default async (req: VercelRequest, res: VercelResponse) => {
-	const generateResponse = new Promise<VercelResponse>((resolve, reject) => {
-		botWebhook(req, res)
-			.then(() => {
-				console.log('success')
-
-				if (res.writable && !res.writableEnded) {
-					res.end('success')
-				}
-
-				resolve(res)
-			})
-			.catch(reason => {
-				console.log('error:', reason)
-				resolve(res)
-			})
-	})
-
-	const timeout = new Promise<VercelResponse>(resolve => {
-		sleep(9000).then(() => {
-			
-			console.log('timeout')
-
-			if (res.writable && !res.writableEnded) {
-				res.end('timeout')
-			}
-
-			resolve(res)
+	const generateResponse = botWebhook(req, res)
+		.then(() => {
+			console.log('success')
+			return res
 		})
-	})
+		.catch(reason => {
+			console.log('error:', reason)
+			return res
+		})
+
+	const timeout = sleep(9000)
+		.then(() => {
+			console.log('timeout generating response')
+			return res
+		})
 
 	await Promise.race([generateResponse, timeout])
 }
