@@ -415,7 +415,12 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 		botWebhook(req, res)
 			.then(() => {
 				console.log('success')
-				resolve(res.end('success'))
+
+				if (res.writable) {
+					res.end('success')
+				}
+
+				resolve(res)
 			})
 			.catch(reason => reject(reason))
 	})
@@ -423,7 +428,12 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 	const timeout = new Promise<VercelResponse>(resolve => {
 		sleep(9000).then(() => {
 			console.log('timeout')
-			resolve(res.end('timeout'))
+
+			if (res.writable) {
+				res.end('timeout')
+			}
+
+			resolve(res)
 		})
 	})
 
