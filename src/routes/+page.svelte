@@ -98,6 +98,13 @@
 <div class="flex flex-col pt-4 w-full px-8 items-center gap-2">
 	<div>
 		<h1 class="text-2xl font-bold w-full text-center">ChatNVC</h1>
+		<h2>
+			ChatNVC is now also available as a telegram bot!<br>
+			I will be focussing all my attention on improving that version.<br>
+			So soon this website will no longer be online.<br>
+			Go try the bot now! It can even listen to voice messages!<br>
+			<a href="https://t.me/ChatNVCBot">@ChatNVCBot</a>
+		</h2>
 	</div>
 
 	{#if state === 'intro'}

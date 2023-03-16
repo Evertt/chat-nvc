@@ -1,7 +1,6 @@
 import { Readable, Writable } from 'stream'
 import { Telegraf, session, type Context } from 'telegraf'
 import { Redis } from '@telegraf/session/redis'
-// import { createClient } from '@supabase/supabase-js'
 import type { Update } from "telegraf/types"
 import { oneLine, oneLineCommaListsAnd } from 'common-tags'
 import { message } from 'telegraf/filters'
@@ -50,60 +49,14 @@ interface ContextWithSession <U extends Update = Update> extends Context<U> {
 }
 
 const BOT_NAME = 'ChatNVC'
-// const chats = new Map<number, Message[]>()
 
 const {
 	OPENAI_KEY,
 	TELEGRAM_KEY,
 	REDIS_USERNAME,
 	REDIS_PASSWORD,
-	// SUPABASE_KEY,
-	// SUPABASE_PASSWORD,
 	TELEGRAM_WEBBOOK_TOKEN,
 } = process.env
-
-// const Supabase = <Session>() => {
-// 	const supabase = createClient(
-// 		`https://db.oayqreivowdwqabufjyj.supabase.co:6543/postgres?pgbouncer=true`,
-// 		SUPABASE_KEY,
-// 	)
-
-// 	return {
-// 		async get(key: string) {
-// 			const { data } = await supabase
-// 				.from('telegraf-sessions')
-// 				.select('session')
-// 				.eq('key', key)
-// 				.single()
-
-// 				console.log("Retrieved a session from supabase:", key, data?.session)
-			
-// 				return data ? data.session as Session : undefined
-// 		},
-
-// 		async set(key: string, session: Session) {
-// 			const { error } = await supabase
-// 				.from('telegraf-sessions')
-// 				.upsert({ key, session })
-// 				.single()
-
-// 				console.log("Stored a session in supabase:", { key, session, error })
-
-// 				return error ? { error } : true
-// 		},
-
-// 		async delete(key: string) {
-// 			const { error } = await supabase
-// 				.from('telegraf-sessions')
-// 				.delete()
-// 				.eq('key', key)
-
-// 			console.log("Deleted a session from supabase:", { key, error })
-
-// 			return error ? { error } : true
-// 		}
-// 	}
-// }
 
 console.log('Instantiating Telegraf bot...')
 const bot = new Telegraf<ContextWithSession>(TELEGRAM_KEY, {
@@ -122,8 +75,6 @@ bot.use(session({
 		messages: [] as Message[]
 	})
 }))
-
-// const host = 'https://chat-nvc.vercel.app'
 
 const convertOggOpusToWebm = async (opusAudioData: Buffer | ArrayBuffer) => {
   const buffer = opusAudioData instanceof Buffer
