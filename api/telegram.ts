@@ -321,7 +321,7 @@ bot.on(message('text'), async ctx => {
 	)
 
 	const handleError = (error: any) => {
-		console.log("Error:", error)
+		console.log("Reply error:", error)
 	
 		return ctx.reply(oneLine`
 			Something went wrong. It's possible that OpenAI's servers are overloaded.
@@ -330,13 +330,14 @@ bot.on(message('text'), async ctx => {
 	}
 
 	const generateReply = getReply(ctx.session.messages, ctx.from.first_name, ctx.message.text, 'text')
-		.then(reply => ctx.replyWithHTML(reply), handleError)
+		.then(reply => ctx.replyWithHTML(reply))
 
 	const timeout = sleep(8000)
-		.then(handleError)
+		.then(() => { throw "timeout" })
 
 	return await Promise
 		.race([generateReply, timeout])
+		.catch(handleError)
 		.finally(() => {
 			stopTyping()
 			// cleanUpChats()
