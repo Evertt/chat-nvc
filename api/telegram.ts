@@ -219,7 +219,9 @@ const moderate = async (input: string) => {
 	return false
 }
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+const sleep = (ms: number) => new Promise<string>(
+	resolve => setTimeout(resolve('timeout'), ms)
+)
 
 const repeat = (fn: () => Promise<any>, ms: number) => {
 	let stop = false
@@ -318,16 +320,23 @@ bot.on(message('text'), async ctx => {
 		5100
 	)
 
-	await getReply(ctx.session.messages, ctx.from.first_name, ctx.message.text, 'text')
-		.then(reply => ctx.replyWithHTML(reply))
-		.catch(error => {
-			console.log("Error:", error)
+	const handleError = (error: any) => {
+		console.log("Error:", error)
 	
-			return ctx.reply(oneLine`
-				Something went wrong. It's possible that OpenAI's servers are overloaded.
-				Please try again in a few seconds or minutes. 🙏
-			`)
-		})
+		return ctx.reply(oneLine`
+			Something went wrong. It's possible that OpenAI's servers are overloaded.
+			Please try again in a few seconds or minutes. 🙏
+		`)
+	}
+
+	const generateReply = getReply(ctx.session.messages, ctx.from.first_name, ctx.message.text, 'text')
+		.then(reply => ctx.replyWithHTML(reply), handleError)
+
+	const timeout = sleep(8000)
+		.then(handleError)
+
+	return await Promise
+		.race([generateReply, timeout])
 		.finally(() => {
 			stopTyping()
 			// cleanUpChats()
@@ -430,6 +439,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
 	const timeout = new Promise<VercelResponse>(resolve => {
 		sleep(9000).then(() => {
+			
 			console.log('timeout')
 
 			if (res.writable && !res.writableEnded) {
