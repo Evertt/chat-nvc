@@ -332,7 +332,7 @@ bot.on(message('text'), async ctx => {
 	const generateReply = getReply(ctx.session.messages, ctx.from.first_name, ctx.message.text, 'text')
 		.then(reply => ctx.replyWithHTML(reply))
 
-	const timeout = sleep(8000)
+	const timeout = sleep(9700)
 		.then(() => { throw "timeout" })
 
 	await Promise
@@ -431,7 +431,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 			return res
 		})
 
-	const timeout = sleep(9000)
+	const timeout = sleep(9800)
 		.then(() => {
 			console.log('timeout generating response')
 			return res
