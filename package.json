@@ -46,6 +46,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@picocss/pico": "^1.5.9",
 		"@supabase/supabase-js": "^2.10.0",
 		"@telegraf/session": "2.0.0-beta.6",
 		"common-tags": "^1.8.2",
@@ -54,6 +55,7 @@
 		"fluent-ffmpeg": "^2.1.2",
 		"gpt3-tokenizer": "^1.1.5",
 		"node-fetch": "^3.3.1",
+		"node-jsonwebtoken": "^0.0.1",
 		"openai": "^3.2.1",
 		"redis": "^4.6.5",
 		"sse.js": "^0.6.1",
