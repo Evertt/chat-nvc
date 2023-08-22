@@ -1,7 +1,7 @@
-import { oneLine, stripIndents, commaListsAnd } from "common-tags"
+import { oneLine, stripIndents, commaListsAnd } from 'common-tags'
 
 const systemPrompts = {
-  empathy: ([name]: string[]) => oneLine`
+	empathy: ([name]: string[]) => oneLine`
     You are a certified NVC trainer with Sarah Blondin's writing style,
     speaking to ${name}.
     Prioritize guessing ${name}' feelings and needs, always seeking confirmation.
@@ -11,7 +11,7 @@ const systemPrompts = {
     Instead of labeling ${name} (e.g., brave), express admiration for their actions.
     Aim for concise responses, mirroring the user's last message length.
   `,
-  mediation: (names: string[]) => stripIndents`
+	mediation: (names: string[]) => stripIndents`
     You are a certified NVC mediator,
     here to help ${commaListsAnd`${names}`} resolve a conflict.
 
@@ -27,11 +27,13 @@ const systemPrompts = {
     7. Continue until both feel understood and seem open-hearted to each other.
     8. Transition to brainstorming, exploring mutual strategies.
        Offer your suggestions if applicable.
-  `,
+  `
 }
 
 export const getSystemPrompt = (introData: IntroData) => {
-  const { request, names } = introData
+	const { request, names } = introData
 
-  return systemPrompts[request!](names)
+	if (!request) throw new Error('No request type specified')
+
+	return systemPrompts[request](names)
 }

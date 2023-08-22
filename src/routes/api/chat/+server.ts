@@ -1,4 +1,3 @@
-import { Readable } from "node:stream"
 import { OPENAI_KEY } from '$env/static/private'
 import { getSystemPrompt } from '$lib/handleAnswers'
 import OpenAI from 'openai'
@@ -6,8 +5,11 @@ import type { RequestHandler } from './$types'
 import { countTokens as getTokens } from '$lib/tokenizer'
 import { json } from '@sveltejs/kit'
 import type { Config } from '@sveltejs/adapter-vercel'
-import { commaListsAnd } from "common-tags"
-import type { ChatCompletionChunk, CompletionCreateParamsStreaming, CreateChatCompletionRequestMessage } from "openai/resources/chat"
+import { commaListsAnd } from 'common-tags'
+import type {
+	CompletionCreateParamsStreaming,
+	CreateChatCompletionRequestMessage
+} from 'openai/resources/chat'
 
 type ChatMessage = CreateChatCompletionRequestMessage
 
@@ -29,13 +31,13 @@ export const POST: RequestHandler = async ({ request }) => {
 			throw new Error('No request data')
 		}
 
-		const model = "gpt-4"
+		const model = 'gpt-4'
 		const introData: IntroData = requestData.introData
 		const messages: ChatMessage[] = requestData.messages
 
 		const systemPrompt: ChatMessage = {
 			role: 'system',
-			content: getSystemPrompt(introData),
+			content: getSystemPrompt(introData)
 		}
 
 		messages.unshift(systemPrompt)
@@ -46,16 +48,21 @@ export const POST: RequestHandler = async ({ request }) => {
 			throw new Error('Query too large')
 		}
 
-		if (messages.length > 1) {
-			const { results: [results] } = await openai.moderations.create({
-				input: messages.at(-1)!.content!
+		const lastMessage = messages.at(-1)?.content
+
+		if (messages.length > 1 && lastMessage) {
+			const {
+				results: [results]
+			} = await openai.moderations.create({
+				input: lastMessage
 			})
 
 			if (results.flagged) {
 				type Categories = (keyof typeof results.categories)[]
 
-				const categories = (Object.keys(results.categories) as Categories)
-					.filter(category => results.categories[category])
+				const categories = (Object.keys(results.categories) as Categories).filter(
+					(category) => results.categories[category]
+				)
 
 				throw new Error(`Message flagged for ${commaListsAnd`${categories}`}}`)
 			}
@@ -73,7 +80,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			model: 'gpt-4',
 			temperature: 0.9,
 			stream: true,
-			messages,
+			messages
 		}
 
 		const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import ChatWindow from '$lib/components/ChatWindow.svelte'
 	import { SSE } from 'sse.js'
-	import { stripIndent } from "common-tags"
-	import type { CreateChatCompletionRequestMessage } from "openai/resources/chat"
+	import { stripIndent } from 'common-tags'
+	import type { CreateChatCompletionRequestMessage } from 'openai/resources/chat'
 
 	const errorMessage = stripIndent`
 		Sorry, the servers of OpenAI are under heavy load.
@@ -13,25 +13,27 @@
 	let chatMessages: CreateChatCompletionRequestMessage[] = []
 	let state: 'intro' | 'chat' = 'intro'
 
+	/*global IntroData*/
 	const introData: IntroData = {
 		request: undefined,
 		names: [''],
 		get startingMessage() {
-			return ({
+			if (!this.request) throw new Error('request is undefined')
+
+			return {
 				empathy: stripIndent`
 					Hi ${this.names[0]}, how can I help you today?
 				`,
 				mediation: stripIndent`
 					Hello ${this.names[0]} and ${this.names[1]}, thank you for reaching out.
 					Can one of you start by explaining what the conflict is about?
-				`,
-			})[this.request!]
+				`
+			}[this.request]
 		}
 	}
 
-	$: if (state === 'chat') chatMessages = [
-		{ role: 'assistant', content: introData.startingMessage }
-	]
+	$: if (state === 'chat')
+		chatMessages = [{ role: 'assistant', content: introData.startingMessage }]
 
 	const sendNewMessage = async (newMessage: string, name?: string) => {
 		error = false
@@ -44,13 +46,10 @@
 
 		const newChatMessages = [
 			...chatMessages,
-			...(newMessage ? [{ role: 'user', content: newMessage, name }] : []),
+			...(newMessage ? [{ role: 'user', content: newMessage, name }] : [])
 		] as typeof chatMessages
 
-		chatMessages = [
-			...newChatMessages,
-			{ role: 'assistant', content: 'thinking...' },
-		]
+		chatMessages = [...newChatMessages, { role: 'assistant', content: 'thinking...' }]
 
 		const eventSource = new SSE('/api/chat', {
 			headers: {
@@ -63,8 +62,6 @@
 
 		eventSource.addEventListener('message', (e) => {
 			try {
-				console.log("e", e)
-				console.log("e.data", e.data)
 				if (e.data === '[DONE]') return void (loading = false)
 
 				const completionResponse = JSON.parse(e.data)
@@ -72,10 +69,7 @@
 
 				if (delta.content) {
 					answer += delta.content
-					chatMessages = [
-						...newChatMessages,
-						{ role: 'assistant', content: answer }
-					]
+					chatMessages = [...newChatMessages, { role: 'assistant', content: answer }]
 				}
 			} catch (err) {
 				handleError(err)
@@ -88,10 +82,7 @@
 	function handleError<T>(err: T) {
 		error = true
 		loading = false
-		chatMessages = [
-			...chatMessages.slice(0, -1),
-			{ role: 'assistant', content: errorMessage }
-		]
+		chatMessages = [...chatMessages.slice(0, -1), { role: 'assistant', content: errorMessage }]
 		console.error(err)
 	}
 </script>
@@ -132,10 +123,7 @@
 					{introData.request === 'empathy' ? "What's your name?" : 'What are your names?'}
 				</p>
 
-				<form
-					class="flex flex-col gap-2"
-					on:submit|preventDefault={() => state = 'chat'}
-				>
+				<form class="flex flex-col gap-2" on:submit|preventDefault={() => (state = 'chat')}>
 					{#each introData.names as name, i}
 						<input
 							class="input input-bordered"
@@ -149,24 +137,17 @@
 							autofocus={i === 0}
 						/>
 					{/each}
-					<button class="input btn btn-accent" type="submit">
-						Continue
-					</button>
+					<button class="input btn btn-accent" type="submit"> Continue </button>
 				</form>
 			{/if}
 		</div>
 	{:else}
 		<ChatWindow
-			loading={loading}
-			error={error}
-			userName={introData.names[0]}
-			bind:chatMessages={chatMessages}
-			on:new-message={
-				e => sendNewMessage(
-					e.detail.content,
-					e.detail.name,
-				)
-			}
+			{loading}
+			{error}
+			names={introData.names}
+			bind:chatMessages
+			on:new-message={(e) => sendNewMessage(e.detail.content, e.detail.name)}
 		/>
 	{/if}
 </div>

@@ -1,6 +1,7 @@
 <script lang="ts">
-	import type { ChatCompletionRequestMessageRoleEnum } from 'openai'
-	export let type: ChatCompletionRequestMessageRoleEnum
+	import type { CreateChatCompletionRequestMessage } from 'openai/resources/chat'
+
+	export let type: CreateChatCompletionRequestMessage['role']
 	export let message: string
 	export let name: string
 
@@ -10,10 +11,7 @@
 <div class="chat {type === 'user' ? 'chat-end' : 'chat-start'} justify-end">
 	<div class="chat-image avatar">
 		<div class="w-10 rounded-full">
-			<img
-				src="https://ui-avatars.com/api/?name={name}"
-				alt="{type} avatar"
-			/>
+			<img src="https://ui-avatars.com/api/?name={name}" alt="{type} avatar" />
 		</div>
 	</div>
 	<div class="chat-header text-white text-opacity-70">
