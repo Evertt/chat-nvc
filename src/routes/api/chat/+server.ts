@@ -1,14 +1,21 @@
+import { Readable } from "node:stream"
 import { OPENAI_KEY } from '$env/static/private'
 import { getSystemPrompt } from '$lib/handleAnswers'
-import type { CreateChatCompletionRequest, ChatCompletionRequestMessage } from 'openai'
+import OpenAI from 'openai'
 import type { RequestHandler } from './$types'
-import { getTokens } from '$lib/tokenizer'
+import { countTokens as getTokens } from '$lib/tokenizer'
 import { json } from '@sveltejs/kit'
 import type { Config } from '@sveltejs/adapter-vercel'
+import { commaListsAnd } from "common-tags"
+import type { ChatCompletionChunk, CompletionCreateParamsStreaming, CreateChatCompletionRequestMessage } from "openai/resources/chat"
+
+type ChatMessage = CreateChatCompletionRequestMessage
 
 export const config: Config = {
 	runtime: 'edge'
 }
+
+const openai = new OpenAI({ apiKey: OPENAI_KEY })
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
@@ -22,51 +29,51 @@ export const POST: RequestHandler = async ({ request }) => {
 			throw new Error('No request data')
 		}
 
+		const model = "gpt-4"
 		const introData: IntroData = requestData.introData
-		const reqMessages: ChatCompletionRequestMessage[] = requestData.messages
+		const messages: ChatMessage[] = requestData.messages
 
-		let tokenCount = 0
-
-		reqMessages.forEach((msg) => {
-			const tokens = getTokens(msg.content)
-			tokenCount += tokens
-		})
-
-		if (reqMessages.length > 0) {
-			const moderationRes = await fetch('https://api.openai.com/v1/moderations', {
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${OPENAI_KEY}`
-				},
-				method: 'POST',
-				body: JSON.stringify({
-					input: reqMessages.at(-1)!.content
-				})
-			})
-
-			const moderationData = await moderationRes.json()
-			const [results] = moderationData.results
-
-			if (results.flagged) {
-				throw new Error('Query flagged by openai')
-			}
+		const systemPrompt: ChatMessage = {
+			role: 'system',
+			content: getSystemPrompt(introData),
 		}
 
-		const systemPrompt = getSystemPrompt(introData)
-		tokenCount += getTokens(systemPrompt)
+		messages.unshift(systemPrompt)
 
-		if (tokenCount >= 4000) {
+		const tokenCount = getTokens(messages, model)
+
+		if (tokenCount >= 8000) {
 			throw new Error('Query too large')
 		}
 
-		const chatRequestOpts: CreateChatCompletionRequest = {
-			model: 'gpt-3.5-turbo',
+		if (messages.length > 1) {
+			const { results: [results] } = await openai.moderations.create({
+				input: messages.at(-1)!.content!
+			})
+
+			if (results.flagged) {
+				type Categories = (keyof typeof results.categories)[]
+
+				const categories = (Object.keys(results.categories) as Categories)
+					.filter(category => results.categories[category])
+
+				throw new Error(`Message flagged for ${commaListsAnd`${categories}`}}`)
+			}
+		}
+
+		/// I wanted to use this, but I wasn't able to convert the stream
+		/// to a stream that worked with new Response()
+		// const iterable = await openai.chat.completions.create(
+		// 	{ messages, model, temperature: 0.9, stream: true }
+		// )
+		//
+		// const stream = asyncIterableToStream(iterable)
+
+		const chatRequestOpts: CompletionCreateParamsStreaming = {
+			model: 'gpt-4',
 			temperature: 0.9,
 			stream: true,
-			messages: [
-				{ role: 'system', content: systemPrompt },
-				...reqMessages
-			],
+			messages,
 		}
 
 		const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {

@@ -1,15 +1,16 @@
 <script lang="ts">
 	import ChatWindow from '$lib/components/ChatWindow.svelte'
-	import type { ChatCompletionRequestMessage } from 'openai'
 	import { SSE } from 'sse.js'
+	import { stripIndent } from "common-tags"
+	import type { CreateChatCompletionRequestMessage } from "openai/resources/chat"
 
-	const errorMessage = `
+	const errorMessage = stripIndent`
 		Sorry, the servers of OpenAI are under heavy load.
 		Please wait a few moments and then click the button below to try again.
 	`
 	let error = false
 	let loading = false
-	let chatMessages: ChatCompletionRequestMessage[] = []
+	let chatMessages: CreateChatCompletionRequestMessage[] = []
 	let state: 'intro' | 'chat' = 'intro'
 
 	const introData: IntroData = {
@@ -17,15 +18,14 @@
 		names: [''],
 		get startingMessage() {
 			return ({
-				empathy: `
-					Hi ${this.names[0]}, what would you like empathy for today?
+				empathy: stripIndent`
+					Hi ${this.names[0]}, how can I help you today?
 				`,
-				mediation: `
+				mediation: stripIndent`
 					Hello ${this.names[0]} and ${this.names[1]}, thank you for reaching out.
 					Can one of you start by explaining what the conflict is about?
-					Also, please make it clear who is currently writing.
 				`,
-			})[this.request!].replace(/^\n +|(\n) +/g, '$1')
+			})[this.request!]
 		}
 	}
 
@@ -33,7 +33,7 @@
 		{ role: 'assistant', content: introData.startingMessage }
 	]
 
-	const sendNewMessage = async (newMessage: string) => {
+	const sendNewMessage = async (newMessage: string, name?: string) => {
 		error = false
 		loading = true
 		let answer = ''
@@ -44,7 +44,7 @@
 
 		const newChatMessages = [
 			...chatMessages,
-			...(newMessage ? [{ role: 'user', content: newMessage }] : []),
+			...(newMessage ? [{ role: 'user', content: newMessage, name }] : []),
 		] as typeof chatMessages
 
 		chatMessages = [
@@ -63,6 +63,8 @@
 
 		eventSource.addEventListener('message', (e) => {
 			try {
+				console.log("e", e)
+				console.log("e.data", e.data)
 				if (e.data === '[DONE]') return void (loading = false)
 
 				const completionResponse = JSON.parse(e.data)
@@ -160,7 +162,10 @@
 			userName={introData.names[0]}
 			bind:chatMessages={chatMessages}
 			on:new-message={
-				e => sendNewMessage(e.detail)
+				e => sendNewMessage(
+					e.detail.content,
+					e.detail.name,
+				)
 			}
 		/>
 	{/if}

@@ -19,9 +19,11 @@
 		"@sveltejs/adapter-vercel": "^2.3.0",
 		"@sveltejs/kit": "^1.10.0",
 		"@types/common-tags": "^1.8.1",
+		"@types/node": "^20.5.1",
 		"@typescript-eslint/eslint-plugin": "^5.54.0",
 		"@typescript-eslint/parser": "^5.54.0",
 		"autoprefixer": "^10.4.13",
+		"common-tags": "^1.8.2",
 		"daisyui": "^2.51.3",
 		"eslint": "^8.35.0",
 		"eslint-config-prettier": "^8.6.0",
@@ -42,8 +44,8 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"gpt3-tokenizer": "^1.1.5",
-		"openai": "^3.2.1",
-		"sse.js": "^0.6.1"
+		"openai": "^4.0.1",
+		"sse.js": "^0.6.1",
+		"tiktoken": "^1.0.10"
 	}
 }

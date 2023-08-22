@@ -3,12 +3,12 @@
     {#each chatMessages as message}
       <ChatMessage
         type={message.role}
-        message={message.content}
+        message={message.content || ""}
         name={message.role === 'user' ? userName : 'ChatNVC'}
       />
     {/each}
   </div>
-  <div class="" bind:this={scrollToDiv} />
+  <div bind:this={scrollToDiv} />
 </div>
 <form
   class="flex w-full rounded-md gap-4 bg-gray-900 p-4"
@@ -29,17 +29,20 @@
 </form>
 
 <script lang="ts">
+	import type { CreateChatCompletionRequestMessage } from "openai/resources/chat"
 	import ChatMessage from './ChatMessage.svelte'
   import { createEventDispatcher } from 'svelte'
-	import type { ChatCompletionRequestMessage } from 'openai'
 
   const dispatch = createEventDispatcher<{
-    'new-message': string
+    'new-message': {
+      content: string,
+      name: string,
+    },
   }>()
 
 	let query: string = ''
 	let scrollToDiv: HTMLDivElement
-	export let chatMessages: ChatCompletionRequestMessage[]
+	export let chatMessages: CreateChatCompletionRequestMessage[]
   export let userName = 'Me'
   export let loading: boolean
   export let error: boolean
@@ -53,7 +56,10 @@
   $: chatMessages && scrollToBottom()
 
 	const handleSubmit = async () => {
-    dispatch('new-message', query)
+    dispatch('new-message', {
+      content: query,
+      name: userName,
+    })
     scrollToBottom()
     query = ''
 	}
