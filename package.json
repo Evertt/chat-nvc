@@ -28,6 +28,7 @@
 		"eslint": "^8.35.0",
 		"eslint-config-prettier": "^8.6.0",
 		"eslint-plugin-svelte3": "^4.0.0",
+		"gpt3-tokenizer": "^1.1.5",
 		"postcss": "^8.4.21",
 		"postcss-load-config": "^4.0.1",
 		"prettier": "^2.8.4",
@@ -45,7 +46,6 @@
 	"type": "module",
 	"dependencies": {
 		"openai": "^4.0.1",
-		"sse.js": "^0.6.1",
-		"tiktoken": "^1.0.10"
+		"sse.js": "^0.6.1"
 	}
 }
