@@ -1,13 +1,7 @@
-import { KV_REST_API_TOKEN, KV_REST_API_URL } from "$env/static/private"
-import { createClient } from "@vercel/kv"
+import { kv } from "$lib/server/kv"
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ request }) {
-  const kv = createClient({
-    url: KV_REST_API_URL,
-    token: KV_REST_API_TOKEN,
-  })
-
   let pageVisits = (await kv.get<number | string[]>("pageVisits")) ?? []
 
   if (typeof pageVisits === "number") {

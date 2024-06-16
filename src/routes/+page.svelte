@@ -33,13 +33,13 @@
     >
       Refresh Page
     </button>
-    <div class="text-5xl font-bold">
-      <p>{data.pageVisits.length} visits.</p>
+    <div class="space-y-4">
+      <p class="text-5xl font-bold">{data.pageVisits.length} visits.</p>
 
-      <p>Last {Math.min(3, data.pageVisits.length)} visits:</p>
+      <p>Last {Math.min(5, data.pageVisits.length)} visits:</p>
 
-      <ul>
-        {#each data.pageVisits.slice(0, -3) as visit}
+      <ul class="space-y-2">
+        {#each data.pageVisits.slice(-5).toReversed() as visit}
           <li>{visit}</li>
         {/each}
       </ul>
