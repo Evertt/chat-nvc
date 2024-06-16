@@ -7,29 +7,24 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const buildDirRegex = /\/(node_modules|\.(vercel|svelte-kit))\/.+$/
 const computedDirname = buildDirRegex.test(__dirname)
-  ? __dirname.replace(buildDirRegex, "/")
-  : `${__dirname}/../../../`
+	? __dirname.replace(buildDirRegex, "/")
+	: `${__dirname}/../../../`
 
-const possibleRootPaths = [
-  resolve(computedDirname, ".env"),
-  resolve(process.cwd(), ".env"),
-]
+const possibleRootPaths = [resolve(computedDirname, ".env"), resolve(process.cwd(), ".env")]
 
 dotenv.config({ path: possibleRootPaths })
 
 const { KV_REST_API_TOKEN, KV_REST_API_URL, KV_KEY_PREFIX = "" } = process.env
 
 const kv =
-  KV_REST_API_URL && KV_REST_API_TOKEN
-    ? createClient({
-        url: KV_REST_API_URL,
-        token: KV_REST_API_TOKEN,
-      })
-    : new VercelKV({
-        request: async (...args) => (
-          console.trace("Running fake VercelKV client", { args }), {}
-        ),
-      })
+	KV_REST_API_URL && KV_REST_API_TOKEN
+		? createClient({
+				url: KV_REST_API_URL,
+				token: KV_REST_API_TOKEN,
+			})
+		: new VercelKV({
+				request: async (...args) => (console.trace("Running fake VercelKV client", { args }), {}),
+			})
 
 const keyPrefix = KV_KEY_PREFIX.replace(/(\w)$/, "$1:")
 

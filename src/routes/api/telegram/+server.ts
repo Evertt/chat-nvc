@@ -5,5 +5,5 @@ import { json } from "@sveltejs/kit"
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET() {
-  return json({ url: env.VERCEL_URL ?? "no vercel url" })
+	return json({ url: env.VERCEL_URL ?? "no vercel url" })
 }

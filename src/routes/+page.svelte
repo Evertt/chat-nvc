@@ -1,88 +1,81 @@
 <script lang="ts">
-  export let data
+	export let data
 
-  function refreshPage() {
-    location.reload()
-  }
+	function refreshPage() {
+		location.reload()
+	}
 </script>
 
-<main
-  class="relative flex flex-col items-center justify-center min-h-screen py-10"
->
-  <a
-    href="https://vercel.com"
-    class="px-6 py-2 text-sm font-medium text-gray-600 transition-all rounded-full shadow-sm bg-white/30 dark:bg-white/80 ring-1 ring-gray-900/5 dark:text-black hover:shadow-lg active:shadow-sm"
-  >
-    Deploy your own to Vercel
-  </a>
-  <h1
-    class="pt-4 pb-8 bg-gradient-to-br dark:from-white from-black via-[#707070] to-[#ffffff] bg-clip-text text-center text-4xl font-medium tracking-tight text-transparent md:text-7xl"
-  >
-    Vercel KV
-  </h1>
-  <div
-    class="flex flex-col items-center w-full max-w-xl p-12 mx-auto rounded-lg shadow-xl dark:bg-white/10 bg-white/30 ring-1 ring-gray-900/5 backdrop-blur-lg"
-  >
-    <div class="mb-6 text-lg text-center">
-      Displayed below is the total number of page views for this demo. Refresh
-      the page and watch it increase!
-    </div>
-    <button
-      on:click={refreshPage}
-      class="mb-6 font-bold underline opacity-70 hover:opacity-100"
-    >
-      Refresh Page
-    </button>
-    <div class="space-y-4">
-      <p class="text-5xl font-bold">{data.pageVisits.length} visits.</p>
+<main class="relative flex min-h-screen flex-col items-center justify-center py-10">
+	<a
+		href="https://vercel.com"
+		class="rounded-full bg-white/30 py-2 px-6 text-sm font-medium text-gray-600 ring-1 shadow-sm ring-gray-900/5 transition-all hover:shadow-lg active:shadow-sm dark:bg-white/80 dark:text-black"
+	>
+		Deploy your own to Vercel
+	</a>
+	<h1
+		class="bg-gradient-to-br from-black via-[#707070] to-[#ffffff] bg-clip-text pt-4 pb-8 text-center text-4xl font-medium tracking-tight text-transparent md:text-7xl dark:from-white"
+	>
+		Vercel KV
+	</h1>
+	<div
+		class="mx-auto flex w-full max-w-xl flex-col items-center rounded-lg bg-white/30 p-12 ring-1 shadow-xl ring-gray-900/5 backdrop-blur-lg dark:bg-white/10"
+	>
+		<div class="mb-6 text-center text-lg">
+			Displayed below is the total number of page views for this demo. Refresh the page and watch it
+			increase!
+		</div>
+		<button on:click={refreshPage} class="mb-6 font-bold underline opacity-70 hover:opacity-100">
+			Refresh Page
+		</button>
+		<div class="space-y-4">
+			<p class="text-5xl font-bold">{data.pageVisits.length} visits.</p>
 
-      <p>Last {Math.min(10, data.pageVisits.length)} visits:</p>
+			<p>Last {Math.min(10, data.pageVisits.length)} visits:</p>
 
-      <ul class="space-y-2">
-        {#each data.pageVisits.slice(-10).toReversed() as visit}
-          <li>{visit}</li>
-        {/each}
-      </ul>
-    </div>
-  </div>
-  <div
-    class="w-full max-w-lg mt-6 font-light text-center text-gray-600 dark:text-gray-300"
-  >
-    Simple hello world demo of
-    <a
-      href="https://vercel.com/kv"
-      class="font-medium underline transition-colors underline-offset-4 dark:hover:text-white hover:text-black"
-    >
-      Vercel KV
-    </a>
-    <div class="flex items-center justify-center my-2">
-      <span>Built with</span>
-      <a
-        href="https://kit.svelte.dev/"
-        class="flex items-center font-medium underline transition-colors underline-offset-4 dark:hover:text-white hover:text-black"
-      >
-        <img src="svelte_logo.png" alt="svelte logo" class="h-6 mx-2" />
-        <p>SvelteKit</p>
-      </a>
-      .
-    </div>
-  </div>
-  <div class="flex flex-col grow">
-    <a href="https://vercel.com">
-      <img
-        src="/vercel.svg"
-        alt="Vercel Logo"
-        class="my-2 text-white dark:text-white"
-        width={100}
-        height={24}
-      />
-    </a>
-    <a
-      href="https://github.com/vercel/examples/tree/main/storage/kv-redis-sveltekit"
-      class="flex items-center h-8 mt-auto space-x-2 bottom-20 right-20"
-    >
-      <img src="/github.svg" alt="GitHub Logo" class="h-6 dark:invert" />
-      <p class="font-light">Source</p>
-    </a>
-  </div>
+			<ul class="space-y-2">
+				{#each data.pageVisits.slice(-10).toReversed() as visit}
+					<li>{visit}</li>
+				{/each}
+			</ul>
+		</div>
+	</div>
+	<div class="mt-6 w-full max-w-lg text-center font-light text-gray-600 dark:text-gray-300">
+		Simple hello world demo of
+		<a
+			href="https://vercel.com/kv"
+			class="font-medium underline underline-offset-4 transition-colors hover:text-black dark:hover:text-white"
+		>
+			Vercel KV
+		</a>
+		<div class="my-2 flex items-center justify-center">
+			<span>Built with</span>
+			<a
+				href="https://kit.svelte.dev/"
+				class="flex items-center font-medium underline underline-offset-4 transition-colors hover:text-black dark:hover:text-white"
+			>
+				<img src="svelte_logo.png" alt="svelte logo" class="mx-2 h-6" />
+				<p>SvelteKit</p>
+			</a>
+			.
+		</div>
+	</div>
+	<div class="flex grow flex-col">
+		<a href="https://vercel.com">
+			<img
+				src="/vercel.svg"
+				alt="Vercel Logo"
+				class="my-2 text-white dark:text-white"
+				width={100}
+				height={24}
+			/>
+		</a>
+		<a
+			href="https://github.com/vercel/examples/tree/main/storage/kv-redis-sveltekit"
+			class="right-20 bottom-20 mt-auto flex h-8 items-center space-x-2"
+		>
+			<img src="/github.svg" alt="GitHub Logo" class="h-6 dark:invert" />
+			<p class="font-light">Source</p>
+		</a>
+	</div>
 </main>
