@@ -1,5 +1,6 @@
-<script>
+<script lang="ts">
   export let data
+
   function refreshPage() {
     location.reload()
   }
@@ -33,7 +34,15 @@
       Refresh Page
     </button>
     <div class="text-5xl font-bold">
-      {data?.pageVisits}
+      <p>{data.pageVisits.length} visits.</p>
+
+      <p>Last {Math.min(3, data.pageVisits.length)} visits:</p>
+
+      <ul>
+        {#each data.pageVisits.slice(0, -3) as visit}
+          <li>{visit}</li>
+        {/each}
+      </ul>
     </div>
   </div>
   <div

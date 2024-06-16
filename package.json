@@ -26,7 +26,11 @@
     "vite": "^5.0.10"
   },
   "dependencies": {
-    "@vercel/kv": "^1.0.1"
+    "@ai-sdk/openai": "^0.0.29",
+    "@vercel/kv": "^1.0.1",
+    "ai": "^3.1.36",
+    "telegraf": "^4.16.3",
+    "zod": "^3.23.8"
   },
   "packageManager": "pnpm@9.3.0"
 }
