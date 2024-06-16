@@ -1,5 +1,5 @@
 {
-  "installCommand": "rm -f pnpm-lock.yaml && rm -rf node_modules && pnpm install && pnpm add -D --force @rollup/rollup-linux-x64-gnu @rollup/wasm-node",
-  "devCommand": "pnpm add --force -D @rollup/rollup-linux-x64-gnu @rollup/wasm-node && pnpm run build && pnpm run preview",
-  "buildCommand": "pnpm run build"
+  "installCommand": "pnpm install --no-frozen-lockfile --fix-lockfile -r",
+  "buildCommand": "pnpm turbo build",
+  "ignoreCommand": "pnpm dlx turbo-ignore"
 }

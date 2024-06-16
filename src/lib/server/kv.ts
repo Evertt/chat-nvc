@@ -1,6 +1,6 @@
-import { dirname } from "node:path"
+import { dirname, resolve } from "node:path"
 import { createClient, VercelKV } from "@vercel/kv"
-import { loadEnv } from "vite"
+import dotenv from "dotenv"
 import { fileURLToPath } from "node:url"
 
 const __filename = fileURLToPath(import.meta.url)
@@ -10,25 +10,26 @@ const computedDirname = buildDirRegex.test(__dirname)
   ? __dirname.replace(buildDirRegex, "/")
   : `${__dirname}/../../../`
 
-const possibleRootPaths = [computedDirname, process.cwd()]
+const possibleRootPaths = [
+  resolve(computedDirname, ".env"),
+  resolve(process.cwd(), ".env"),
+]
 
-const mode = import.meta.env.MODE || process.env.NODE_ENV || "development"
+dotenv.config({ path: possibleRootPaths })
 
-const env = {
-  ...loadEnv(mode, possibleRootPaths[0], "KV_"),
-  ...loadEnv(mode, possibleRootPaths[1], "KV_"),
-  ...import.meta.env,
-  ...process.env,
-}
+const { KV_REST_API_TOKEN, KV_REST_API_URL, KV_KEY_PREFIX = "" } = process.env
 
-const { KV_REST_API_TOKEN, KV_REST_API_URL, KV_KEY_PREFIX = "" } = env
-
-const kv = KV_REST_API_URL
-  ? createClient({
-      url: KV_REST_API_URL,
-      token: KV_REST_API_TOKEN,
-    })
-  : new VercelKV({ request: async (...args) => (console.trace({ args }), {}) })
+const kv =
+  KV_REST_API_URL && KV_REST_API_TOKEN
+    ? createClient({
+        url: KV_REST_API_URL,
+        token: KV_REST_API_TOKEN,
+      })
+    : new VercelKV({
+        request: async (...args) => (
+          console.trace("Running fake VercelKV client", { args }), {}
+        ),
+      })
 
 const keyPrefix = KV_KEY_PREFIX.replace(/(\w)$/, "$1:")
 

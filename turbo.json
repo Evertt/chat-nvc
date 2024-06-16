@@ -2,9 +2,11 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "outputs": [
-        ".svelte-kit/**"
-      ]
+      "dependsOn": ["^build"],
+      "outputs": [".svelte-kit/**"]
+    },
+    "postbuild": {
+      "dependsOn": ["build"]
     },
     "lint": {}
   }

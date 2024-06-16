@@ -36,10 +36,10 @@
     <div class="space-y-4">
       <p class="text-5xl font-bold">{data.pageVisits.length} visits.</p>
 
-      <p>Last {Math.min(5, data.pageVisits.length)} visits:</p>
+      <p>Last {Math.min(10, data.pageVisits.length)} visits:</p>
 
       <ul class="space-y-2">
-        {#each data.pageVisits.slice(-5).toReversed() as visit}
+        {#each data.pageVisits.slice(-10).toReversed() as visit}
           <li>{visit}</li>
         {/each}
       </ul>

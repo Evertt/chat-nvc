@@ -14,15 +14,12 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch"
   },
   "devDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.18.0",
-    "@rollup/wasm-node": "^4.18.0",
-    "@sveltejs/adapter-vercel": "^4.0.3",
+    "@sveltejs/adapter-vercel": "^5.3.2",
     "@sveltejs/kit": "^2.0.6",
     "@sveltejs/vite-plugin-svelte": "^3.0.1",
     "@types/node": "^20.14.2",
     "autoprefixer": "^10.4.14",
-    "lightningcss": "^1.25.1",
-    "pnpapi": "^0.0.0",
+    "dotenv": "^16.4.5",
     "postcss": "^8.4.23",
     "svelte": "^4.2.8",
     "svelte-check": "^3.6.2",
