@@ -1,17 +1,17 @@
-import { loginUser } from "$lib/server/auth"
-import { redirect } from "@sveltejs/kit"
-import type { PageServerLoad, Actions } from "./$types"
+import { KV_REST_API_TOKEN, KV_REST_API_URL } from '$env/static/private'
+import { createClient } from '@vercel/kv'
 
-export const load: PageServerLoad = event => {
-	const { isAuthenticated } = event.locals
-	console.log("isAuthenticated:", isAuthenticated)
+/** @type {import('./$types').PageLoad} */
+export async function load() {
+  const kv = createClient({
+    url: KV_REST_API_URL,
+    token: KV_REST_API_TOKEN,
+  })
+  const pageVisits = await kv.get<number>('pageVisits')
+  await kv.set('pageVisits', (pageVisits || 0) + 1)
+  const updatedPageVisits = await kv.get('pageVisits')
 
-	if (event.locals.isAuthenticated) {
-		console.log("redirecting to dashboard")
-		throw redirect(302, "/dashboard")
-	}
-}
-
-export const actions: Actions = {
-	default: loginUser
+  return {
+    pageVisits: updatedPageVisits,
+  }
 }
