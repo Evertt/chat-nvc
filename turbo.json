@@ -1,9 +1,19 @@
 {
 	"$schema": "https://turbo.build/schema.json",
+	"globalDependencies": [
+		".env",
+		".env.*",
+		"!.env.example",
+		"!.env.test",
+		"svelte.config.js",
+		"vite.config.ts",
+		"tsconfig.json"
+	],
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
-			"outputs": [".svelte-kit/**"]
+			"inputs": ["$TURBO_DEFAULT$", ".env", ".env.local"],
+			"outputs": [".svelte-kit/**", "build/**", "dist/**"]
 		},
 		"postbuild": {
 			"dependsOn": ["build"]

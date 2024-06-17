@@ -1,11 +1,13 @@
 node_modules
 
 # Output
+.svelte-kit
+.turbo
 .output
 .vercel
-/.svelte-kit
+dist
 /package
-/build
+build
 
 # OS
 .DS_Store
@@ -20,5 +22,4 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
-.turbo
 *.tsbuildinfo
