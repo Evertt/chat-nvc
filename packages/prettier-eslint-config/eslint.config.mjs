@@ -3,15 +3,10 @@ import ts from "typescript-eslint"
 import svelte from "eslint-plugin-svelte"
 import prettier from "eslint-config-prettier"
 import globals from "globals"
+import { resolve } from "node:path"
 
-/**
- * @type {import('eslint').Linter.FlatConfig[]}
- *
- * This configuration is working fine,
- * but some of this is still in alpha.
- * So the types aren't quite right yet.
- *
- * @ts-expect-error: see above */
+const project = resolve(process.cwd(), "tsconfig.json")
+
 export default [
 	js.configs.recommended,
 	...ts.configs.recommended,
@@ -35,6 +30,15 @@ export default [
 		},
 	},
 	{
-		ignores: ["build/", ".svelte-kit/", "dist/", ".vercel/", ".turbo/"],
+		settings: {
+			"import/resolver": {
+				typescript: {
+					project,
+				},
+			},
+		},
+	},
+	{
+		ignores: ["**/build/", "**/.svelte-kit/", "**/dist/", "**/.vercel/", "**/.turbo/"],
 	},
 ]

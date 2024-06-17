@@ -5,15 +5,15 @@
 		".env.*",
 		"!.env.example",
 		"!.env.test",
-		"svelte.config.js",
-		"vite.config.ts",
-		"tsconfig.json"
+		"tsconfig.json",
+		"src/**"
 	],
+	"globalEnv": ["KV_*"],
+	"globalPassThroughEnv": ["KV_*"],
 	"tasks": {
+		"dev": {},
 		"build": {
-			"dependsOn": ["^build"],
-			"inputs": ["$TURBO_DEFAULT$", ".env", ".env.local"],
-			"outputs": [".svelte-kit/**", "build/**", "dist/**"]
+			"dependsOn": ["^build"]
 		},
 		"postbuild": {
 			"dependsOn": ["build"]

@@ -1,0 +1,8 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"extends": "./bundler.json",
+	"display": "Browser",
+	"compilerOptions": {
+		"lib": ["DOM", "DOM.Iterable", "DOM.AsyncIterable"]
+	}
+}

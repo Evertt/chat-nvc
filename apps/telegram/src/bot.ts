@@ -1,7 +1,9 @@
 import { Telegraf } from "telegraf"
-import { me } from "./me"
+import { me } from "./me.js"
 
-export const bot = new Telegraf(process.env.TELEGRAM_KEY!, {
+const { TELEGRAM_KEY } = process.env
+
+export const bot = new Telegraf(TELEGRAM_KEY!, {
 	telegram: { webhookReply: false },
 	handlerTimeout: 1000 * 60 * 5, // 5 minutes
 })

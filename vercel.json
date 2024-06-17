@@ -1,4 +1,3 @@
 {
-	"buildCommand": "bun turbo build",
-	"ignoreCommand": "bun x turbo-ignore"
+	"ignoreCommand": "pnpm dlx turbo-ignore"
 }
