@@ -1,12 +1,15 @@
 import { kv } from "@repo/kv"
 
 export async function load({ request }) {
-	const pageVisits = (await kv.get<string[]>("pageVisits")) ?? []
+	const headers = Object.fromEntries(request.headers.entries())
+	type Headers = typeof headers
 
-	pageVisits.push(request.headers.get("user-agent") || "No user-agent header")
+	const pageVisits = (await kv.get<Headers[]>("pageVisits")) ?? []
+
+	pageVisits.push(headers)
 	await kv.set("pageVisits", pageVisits)
 
-	const updatedPageVisits = (await kv.get<string[]>("pageVisits"))!
+	const updatedPageVisits = (await kv.get<Headers[]>("pageVisits"))!
 
 	return {
 		pageVisits: updatedPageVisits,

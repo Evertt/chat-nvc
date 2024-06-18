@@ -1,5 +1,5 @@
 <script lang="ts">
-	export let data
+	const { data } = $props()
 
 	function refreshPage() {
 		location.reload()
@@ -9,23 +9,23 @@
 <main class="relative flex min-h-screen flex-col items-center justify-center py-10">
 	<a
 		href="https://vercel.com"
-		class="rounded-full bg-white/30 py-2 px-6 text-sm font-medium text-gray-600 ring-1 shadow-sm ring-gray-900/5 transition-all hover:shadow-lg active:shadow-sm dark:bg-white/80 dark:text-black"
+		class="rounded-full bg-white/30 px-6 py-2 text-sm font-medium text-gray-600 shadow-sm ring-1 ring-gray-900/5 transition-all hover:shadow-lg active:shadow-sm dark:bg-white/80 dark:text-black"
 	>
 		Deploy your own to Vercel
 	</a>
 	<h1
-		class="bg-gradient-to-br from-black via-[#707070] to-[#ffffff] bg-clip-text pt-4 pb-8 text-center text-4xl font-medium tracking-tight text-transparent md:text-7xl dark:from-white"
+		class="bg-gradient-to-br from-black via-[#707070] to-[#ffffff] bg-clip-text pb-8 pt-4 text-center text-4xl font-medium tracking-tight text-transparent md:text-7xl dark:from-white"
 	>
 		Vercel KV
 	</h1>
 	<div
-		class="mx-auto flex w-full max-w-xl flex-col items-center rounded-lg bg-white/30 p-12 ring-1 shadow-xl ring-gray-900/5 backdrop-blur-lg dark:bg-white/10"
+		class="mx-auto flex w-full max-w-xl flex-col items-center rounded-lg bg-white/30 p-12 shadow-xl ring-1 ring-gray-900/5 backdrop-blur-lg dark:bg-white/10"
 	>
 		<div class="mb-6 text-center text-lg">
 			Displayed below is the total number of page views for this demo. Refresh the page and watch it
 			increase!
 		</div>
-		<button on:click={refreshPage} class="mb-6 font-bold underline opacity-70 hover:opacity-100">
+		<button onclick={refreshPage} class="mb-6 font-bold underline opacity-70 hover:opacity-100">
 			Refresh Page
 		</button>
 		<div class="space-y-4">
@@ -33,9 +33,9 @@
 
 			<p>Last {Math.min(10, data.pageVisits.length)} visits:</p>
 
-			<ul class="space-y-2">
+			<ul class="space-y-4">
 				{#each data.pageVisits.slice(-10).toReversed() as visit}
-					<li>{visit}</li>
+					<li class="whitespace-pre">{JSON.stringify(visit, null, 2)}</li>
 				{/each}
 			</ul>
 		</div>
@@ -72,7 +72,7 @@
 		</a>
 		<a
 			href="https://github.com/vercel/examples/tree/main/storage/kv-redis-sveltekit"
-			class="right-20 bottom-20 mt-auto flex h-8 items-center space-x-2"
+			class="bottom-20 right-20 mt-auto flex h-8 items-center space-x-2"
 		>
 			<img src="/github.svg" alt="GitHub Logo" class="h-6 dark:invert" />
 			<p class="font-light">Source</p>
