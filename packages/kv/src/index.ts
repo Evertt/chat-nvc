@@ -1,7 +1,11 @@
 import dotenv from "dotenv"
 import { createClient, VercelKV } from "@vercel/kv"
 
-dotenv.config()
+const cwd = process.cwd()
+
+const { NODE_ENV = "development", MODE = NODE_ENV } = process.env
+
+dotenv.config({ path: [`${cwd}/.env`, ...(MODE ? [`${cwd}/.env.${MODE}`] : [])] })
 
 const { KV_REST_API_TOKEN = "", KV_REST_API_URL = "", KV_KEY_PREFIX = "" } = process.env
 
@@ -17,10 +21,21 @@ const kv =
 
 const keyPrefix = KV_KEY_PREFIX.replace(/(\w)$/, "$1:")
 
-const oldGet = kv.get.bind(kv) as typeof kv.get
-kv.get = (key: string) => oldGet(`${keyPrefix}${key}`)
+type GetFn = typeof kv.get
+type SetFn = typeof kv.set
 
-const oldSet = kv.set.bind(kv) as typeof kv.set
-kv.set = (key, ...args) => oldSet(`${keyPrefix}${key}`, ...args)
+const kvProxy = new Proxy(kv, {
+	get(target, key) {
+		if (key === "get") {
+			return ((key, ...args) => target.get(`${keyPrefix}${key}`, ...args)) as GetFn
+		}
 
-export { kv }
+		if (key === "set") {
+			return ((key, ...args) => target.set(`${keyPrefix}${key}`, ...args)) as SetFn
+		}
+
+		return Reflect.get(target, key)
+	},
+})
+
+export { kvProxy as kv }

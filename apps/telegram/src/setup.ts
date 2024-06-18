@@ -3,6 +3,7 @@ import { createOpenAI } from "@ai-sdk/openai"
 import { type CoreMessage, generateText } from "ai"
 import { message } from "telegraf/filters"
 import { sleep } from "./utils.js"
+import type { Telegraf } from "telegraf"
 
 const { OPENROUTER_API_KEY, OPENROUTER_BASE_URL } = process.env
 
@@ -60,4 +61,38 @@ bot.on(message("text"), async (ctx) => {
 	)
 })
 
-export { bot }
+type Webhook = Telegraf.LaunchOptions["webhook"]
+
+const { PORT, VERCEL_URL, TELEGRAM_WEBHOOK_TOKEN } = process.env
+
+const defaultWebhook: Webhook = VERCEL_URL
+	? {
+			domain: VERCEL_URL,
+			port: +PORT!,
+			hookPath: "/",
+			secretToken: TELEGRAM_WEBHOOK_TOKEN!,
+		}
+	: undefined
+
+const launchBot = (webhook?: Webhook) =>
+	bot
+		.launch(
+			{
+				webhook:
+					webhook || defaultWebhook
+						? {
+								domain: VERCEL_URL!,
+								...defaultWebhook,
+								...webhook,
+							}
+						: undefined,
+				dropPendingUpdates: true,
+			},
+			() => console.log("Bot is running!")
+		)
+		.catch((error: unknown) => {
+			console.error(error)
+			process.exit(1)
+		})
+
+export { bot, launchBot }
