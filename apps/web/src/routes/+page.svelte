@@ -34,8 +34,8 @@
 			<p>Last {Math.min(10, data.pageVisits.length)} visits:</p>
 
 			<ul class="space-y-4">
-				{#each data.pageVisits.slice(-10).toReversed() as visit}
-					<li class="whitespace-pre">{JSON.stringify(visit, null, 2)}</li>
+				{#each data.pageVisits.slice(-10).toReversed() as forwardedHost}
+					<li class="whitespace-pre">{forwardedHost}</li>
 				{/each}
 			</ul>
 		</div>
