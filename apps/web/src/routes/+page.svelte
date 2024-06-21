@@ -34,8 +34,8 @@
 			<p>Last {Math.min(10, data.pageVisits.length)} visits:</p>
 
 			<ul class="space-y-4">
-				{#each data.pageVisits.slice(-10).toReversed() as forwardedHost}
-					<li class="whitespace-pre">{forwardedHost}</li>
+				{#each data.pageVisits.slice(-10).toReversed() as headersString}
+					<li class="whitespace-pre">{headersString}</li>
 				{/each}
 			</ul>
 		</div>
